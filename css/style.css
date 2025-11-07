@@ -152,6 +152,137 @@ header .nav ul li a:hover {
   font-size: 1.4rem;
 }
 
+/* Cabecera especializada para la tarjeta de grupos */
+.group-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--card-border);
+}
+
+.group-card-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.group-card-title h2 {
+  margin: 0;
+}
+
+.group-card-title .action-link {
+  font-weight: 600;
+}
+
+.group-action-tabs {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.group-action-tab {
+  border: 1px solid var(--card-border);
+  background: transparent;
+  color: var(--text-color);
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.group-action-tab:hover {
+  border-color: var(--primary-color);
+}
+
+.group-action-tab.active {
+  background: var(--primary-color);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 6px 14px rgba(13, 110, 253, 0.18);
+}
+
+.group-action-panel {
+  display: none;
+  margin-top: 1rem;
+}
+
+.group-action-panel.active {
+  display: block;
+}
+
+.group-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.group-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--card-border);
+  border-radius: calc(var(--border-radius) * 0.75);
+  background-color: var(--surface-color);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.group-row:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+}
+
+.group-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.group-name {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.group-meta {
+  font-size: 0.85rem;
+  color: var(--secondary-color);
+}
+
+.group-row-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.group-row-controls .action-link {
+  font-weight: 600;
+}
+
+.muted-text {
+  color: var(--secondary-color);
+  font-size: 0.9rem;
+  margin: 0 0 1rem 0;
+}
+
+.muted-list {
+  color: var(--secondary-color);
+  padding-left: 1.2rem;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+}
+
 /* Formularios */
 form {
   display: flex;

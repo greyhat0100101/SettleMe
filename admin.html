@@ -75,10 +75,32 @@
     </section>
     <!-- Sección de grupos -->
     <section id="groupsSection" class="admin-section" style="display:none;">
-      <div class="card">
-        <h2>Grupos</h2>
-        <button class="btn-secondary" onclick="window.location.href='group.html'">Gestionar grupos</button>
-        <div id="groupsList" style="margin-top:1rem;"></div>
+      <div class="card group-card">
+        <div class="card-header group-card-header">
+          <div class="group-card-title">
+            <h2>Grupos</h2>
+            <a href="group.html" class="action-link" id="groupDetailsShortcut">Ver detalles</a>
+          </div>
+          <div class="group-action-tabs" role="tablist">
+            <button type="button" class="group-action-tab active" data-target="groupActionList">Listado</button>
+            <button type="button" class="group-action-tab" data-target="groupActionManage">Gestionar</button>
+            <button type="button" class="group-action-tab" data-target="groupActionExports">Exportar</button>
+          </div>
+        </div>
+        <div id="groupActionList" class="group-action-panel active">
+          <div id="groupsList" class="group-list"></div>
+        </div>
+        <div id="groupActionManage" class="group-action-panel">
+          <p class="muted-text">Administra la estructura completa de grupos en la vista dedicada.</p>
+          <button class="btn-secondary" onclick="window.location.href='group.html'">Gestionar grupos</button>
+        </div>
+        <div id="groupActionExports" class="group-action-panel">
+          <p class="muted-text">Selecciona un grupo del listado para descargar horas y recibos.</p>
+          <ul class="muted-list">
+            <li>Horas trabajadas disponibles en CSV o PDF.</li>
+            <li>Recibos registrados exportables en CSV o PDF.</li>
+          </ul>
+        </div>
       </div>
     </section>
     <!-- Sección de calendario -->
@@ -270,6 +292,20 @@
 
       // Cargar grupos para el panel inferior
       await loadGroups();
+
+      // Gestión de pestañas dentro de la tarjeta de grupos
+      const groupActionTabs = document.querySelectorAll('.group-action-tab');
+      const groupActionPanels = document.querySelectorAll('.group-action-panel');
+      groupActionTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          groupActionTabs.forEach(btn => btn.classList.remove('active'));
+          tab.classList.add('active');
+          const target = tab.getAttribute('data-target');
+          groupActionPanels.forEach(panel => {
+            panel.classList.toggle('active', panel.id === target);
+          });
+        });
+      });
       // Renderizar calendario del administrador
       await renderAdminCalendar();
 
@@ -457,8 +493,7 @@
 
       // Cerrar menús desplegables en la tabla de empleados al hacer clic fuera de ellos
       document.addEventListener('click', (ev) => {
-        const dropdowns = document.querySelectorAll('#employeesTable .dropdown');
-        dropdowns.forEach(dd => {
+        document.querySelectorAll('.dropdown').forEach(dd => {
           if (!dd.contains(ev.target)) dd.classList.remove('open');
         });
       });
@@ -600,7 +635,7 @@
         dropBtn.addEventListener('click', (e) => {
           e.stopPropagation();
           // Cerrar otros menús abiertos
-          document.querySelectorAll('#employeesTable .dropdown').forEach(dd => {
+          document.querySelectorAll('.dropdown').forEach(dd => {
             if (dd !== dropdown) dd.classList.remove('open');
           });
           dropdown.classList.toggle('open');
@@ -612,57 +647,94 @@
     }
     async function loadGroups() {
       const listEl = document.getElementById('groupsList');
+      if (!listEl) return;
       listEl.innerHTML = '';
       const groups = await getGroups();
       if (groups.length === 0) {
-        listEl.textContent = 'No hay grupos creados.';
+        const emptyMsg = document.createElement('p');
+        emptyMsg.className = 'muted-text';
+        emptyMsg.textContent = 'No hay grupos creados.';
+        listEl.appendChild(emptyMsg);
         return;
       }
       groups.forEach(g => {
-        const div = document.createElement('div');
-        div.style.marginBottom = '0.5rem';
-        // Nombre del grupo
-        const badge = document.createElement('span');
-        badge.className = 'badge';
-        badge.textContent = g.name;
-        div.appendChild(badge);
-        // Enlace a detalles
-        const link = document.createElement('a');
-        link.href = `group.html?groupId=${g.id}`;
-        link.className = 'action-link';
-        link.textContent = 'ver detalles';
-        link.style.marginLeft = '0.5rem';
-        div.appendChild(link);
-        // Botones de exportación rápida
-        // Horas CSV
-        const btnTimesCsv = document.createElement('button');
-        btnTimesCsv.className = 'btn-secondary';
-        btnTimesCsv.textContent = 'Horas CSV';
-        btnTimesCsv.style.marginLeft = '0.5rem';
-        btnTimesCsv.onclick = () => exportGroupTimesCSV(g.id);
-        div.appendChild(btnTimesCsv);
-        // Horas PDF
-        const btnTimesPdf = document.createElement('button');
-        btnTimesPdf.className = 'btn-secondary';
-        btnTimesPdf.textContent = 'Horas PDF';
-        btnTimesPdf.style.marginLeft = '0.25rem';
-        btnTimesPdf.onclick = () => exportGroupTimesPDF(g.id);
-        div.appendChild(btnTimesPdf);
-        // Recibos CSV
-        const btnRecCsv = document.createElement('button');
-        btnRecCsv.className = 'btn-secondary';
-        btnRecCsv.textContent = 'Recibos CSV';
-        btnRecCsv.style.marginLeft = '0.5rem';
-        btnRecCsv.onclick = () => exportGroupReceiptsCSV(g.id);
-        div.appendChild(btnRecCsv);
-        // Recibos PDF
-        const btnRecPdf = document.createElement('button');
-        btnRecPdf.className = 'btn-secondary';
-        btnRecPdf.textContent = 'Recibos PDF';
-        btnRecPdf.style.marginLeft = '0.25rem';
-        btnRecPdf.onclick = () => exportGroupReceiptsPDF(g.id);
-        div.appendChild(btnRecPdf);
-        listEl.appendChild(div);
+        const row = document.createElement('div');
+        row.className = 'group-row';
+
+        const info = document.createElement('div');
+        info.className = 'group-info';
+
+        const name = document.createElement('span');
+        name.className = 'group-name';
+        name.textContent = g.name;
+        info.appendChild(name);
+
+        const memberCount = document.createElement('span');
+        memberCount.className = 'group-meta';
+        const count = (g.members || []).length;
+        memberCount.textContent = count === 1 ? '1 miembro' : `${count} miembros`;
+        info.appendChild(memberCount);
+
+        row.appendChild(info);
+
+        const controls = document.createElement('div');
+        controls.className = 'group-row-controls';
+
+        const detailsLink = document.createElement('a');
+        detailsLink.href = `group.html?groupId=${g.id}`;
+        detailsLink.className = 'action-link';
+        detailsLink.textContent = 'Ver detalles';
+        controls.appendChild(detailsLink);
+
+        const dropdown = document.createElement('div');
+        dropdown.className = 'dropdown group-dropdown';
+
+        const dropBtn = document.createElement('button');
+        dropBtn.className = 'dropdown-button';
+        dropBtn.innerHTML = '&#8942;';
+        dropdown.appendChild(dropBtn);
+
+        const menu = document.createElement('div');
+        menu.className = 'dropdown-menu';
+
+        const manageOption = document.createElement('a');
+        manageOption.href = `group.html?groupId=${g.id}`;
+        manageOption.textContent = 'Gestionar grupo';
+        menu.appendChild(manageOption);
+
+        const timesCsv = document.createElement('button');
+        timesCsv.textContent = 'Horas CSV';
+        timesCsv.onclick = () => exportGroupTimesCSV(g.id);
+        menu.appendChild(timesCsv);
+
+        const timesPdf = document.createElement('button');
+        timesPdf.textContent = 'Horas PDF';
+        timesPdf.onclick = () => exportGroupTimesPDF(g.id);
+        menu.appendChild(timesPdf);
+
+        const receiptsCsv = document.createElement('button');
+        receiptsCsv.textContent = 'Recibos CSV';
+        receiptsCsv.onclick = () => exportGroupReceiptsCSV(g.id);
+        menu.appendChild(receiptsCsv);
+
+        const receiptsPdf = document.createElement('button');
+        receiptsPdf.textContent = 'Recibos PDF';
+        receiptsPdf.onclick = () => exportGroupReceiptsPDF(g.id);
+        menu.appendChild(receiptsPdf);
+
+        dropdown.appendChild(menu);
+        controls.appendChild(dropdown);
+
+        row.appendChild(controls);
+        listEl.appendChild(row);
+
+        dropBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          document.querySelectorAll('.dropdown').forEach(dd => {
+            if (dd !== dropdown) dd.classList.remove('open');
+          });
+          dropdown.classList.toggle('open');
+        });
       });
     }
 
