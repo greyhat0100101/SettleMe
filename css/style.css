@@ -152,6 +152,116 @@ header .nav ul li a:hover {
   font-size: 1.4rem;
 }
 
+.group-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--card-border);
+  padding-bottom: 1rem;
+}
+
+.group-card-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.group-card-title h2 {
+  margin: 0;
+}
+
+.group-tabs {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.group-tab {
+  border: 1px solid var(--card-border);
+  background: transparent;
+  color: var(--text-color);
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.group-tab:hover {
+  border-color: var(--primary-color);
+}
+
+.group-tab.active {
+  background: var(--primary-color);
+  color: #fff;
+  border-color: var(--primary-color);
+}
+
+.group-panel {
+  display: none;
+  margin-top: 1.25rem;
+}
+
+.group-panel.active {
+  display: block;
+}
+
+.group-panel p {
+  margin-top: 0;
+}
+
+.group-panel ul {
+  margin-top: 0.5rem;
+  padding-left: 1.25rem;
+}
+
+.group-panel ul li {
+  margin-bottom: 0.4rem;
+}
+
+.group-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.group-item {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--card-border);
+  border-radius: calc(var(--border-radius) * 0.75);
+  background-color: var(--surface-color);
+}
+
+.group-item-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.group-item-meta {
+  font-size: 0.85rem;
+  color: var(--secondary-color);
+}
+
+.group-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.group-empty {
+  margin: 0;
+  color: var(--secondary-color);
+}
+
 /* Formularios */
 form {
   display: flex;
