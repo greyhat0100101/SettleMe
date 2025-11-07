@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SettleMe – Panel de empleado</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header>
+    <div class="nav">
+      <!-- Logo de la compañía en lugar del texto de marca -->
+      <img id="companyLogo" class="company-logo" src="" alt="Logo">
+      <ul>
+        <li><span id="employeeName"></span></li>
+        <li><button id="toggleDark" class="dark-toggle" title="Alternar modo oscuro">🌙</button></li>
+        <!-- Botón de configuración para empleados -->
+        <li><button id="employeeSettingsButton" class="dark-toggle" title="Configuración">⚙</button></li>
+        <li><a href="index.html" class="action-link" onclick="logout()">Cerrar sesión</a></li>
+        <li id="adminLink" style="display:none;"><a href="admin.html" class="action-link">Panel de administración</a></li>
+      </ul>
+    </div>
+  </header>
+  <main class="container" id="employeeContainer">
+    <div class="card" id="welcomeCard">
+      <!-- Foto de perfil -->
+      <img id="profilePhotoDisplay" class="profile-photo-display" src="" alt="Foto de perfil" />
+      <h2>¡Bienvenido, <span id="welcomeName"></span>!</h2>
+      <p>Tus grupos: <span id="employeeGroups"></span></p>
+    </div>
+
+    <!-- Calendario de asistencia -->
+    <div class="card" id="calendarCard">
+      <h2>Calendario</h2>
+      <div id="employeeCalendar" class="calendar-grid"></div>
+    </div>
+    <div class="card" id="clockCard">
+      <h2>Registro de horario</h2>
+      <button id="clockButton">Iniciar jornada</button>
+      <div class="table-responsive">
+        <table id="timesTable">
+          <thead>
+            <tr>
+              <th>Entrada</th>
+              <th>Salida</th>
+              <th>Horas</th>
+            </tr>
+          </thead>
+          <tbody>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card" id="receiptCard">
+      <h2>Subir recibo de gasto</h2>
+      <form id="receiptForm">
+        <div class="form-group">
+          <label for="receiptCategory">Categoría</label>
+          <select id="receiptCategory" required>
+            <option value="Gasolina">Gasolina</option>
+            <option value="Diésel">Diésel</option>
+            <option value="DEF">DEF</option>
+            <option value="Comida">Comida</option>
+            <option value="Ropa">Ropa</option>
+            <option value="Otros">Otros</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="receiptFile">Imagen del recibo</label>
+          <input type="file" id="receiptFile" accept="image/*" required>
+        </div>
+      <div class="form-group">
+        <label for="receiptAmount">Monto (USD)</label>
+        <input type="number" id="receiptAmount" step="0.01" required>
+      </div>
+        <div class="form-group">
+          <label for="receiptNote">Descripción (opcional)</label>
+          <textarea id="receiptNote" rows="2"></textarea>
+        </div>
+        <button type="submit">Guardar recibo</button>
+      </form>
+      <div class="table-responsive">
+        <table id="receiptsTable">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Categoría</th>
+              <th>Monto</th>
+              <th>Descripción</th>
+              <th>Ver</th>
+            </tr>
+          </thead>
+          <tbody>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+  <!-- Modal para visualizar recibo -->
+  <div id="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); justify-content:center; align-items:center;">
+    <div style="background: var(--surface-color); padding: 1rem; border-radius: var(--border-radius); max-width:90%; max-height:90%; overflow:auto; position:relative;">
+      <button id="closeModal" class="btn-secondary" style="position:absolute; top:0.5rem; right:0.5rem;">Cerrar</button>
+      <img id="modalImage" src="" alt="Recibo" style="max-width:100%; max-height:80vh; display:block; margin:auto;" />
+      <p id="modalNote"></p>
+    </div>
+  </div>
+
+  <!-- Modal para detalles del día -->
+  <div id="dayModal">
+    <div class="modal-content">
+      <button class="modal-close" id="closeDayModal">✕</button>
+      <h3 id="dayModalTitle">Día</h3>
+      <div id="dayTimesContainer">
+        <!-- Se insertan filas aquí -->
+      </div>
+      <div class="form-group">
+        <label for="dayPassword">Contraseña para clock in/out</label>
+        <input type="password" id="dayPassword" />
+      </div>
+      <button id="dayClockButton" class="btn-secondary">Clock in/out</button>
+    </div>
+  </div>
+
+  <!-- Panel de ajustes para empleados -->
+  <div id="employeeSettingsPanel" class="settings-panel">
+    <h3>Ajustes</h3>
+    <h4>Ajustes de cuenta</h4>
+    <button id="changePasswordButton" class="btn-secondary" style="width:100%; margin-bottom:0.5rem;">Cambiar contraseña</button>
+    <button id="deleteAccountButton" class="btn-danger" style="width:100%;">Eliminar cuenta</button>
+    <button id="employeeSettingsClose" class="btn-secondary" style="margin-top:0.75rem; width:100%;">Cerrar</button>
+  </div>
+
+  <!-- Modal para cambiar contraseña -->
+  <div id="changePasswordModal">
+    <div class="modal-content">
+      <button class="modal-close" id="closeChangePassword">✕</button>
+      <h3>Cambiar contraseña</h3>
+      <div class="form-group">
+        <label for="currentPassword">Contraseña actual</label>
+        <input type="password" id="currentPassword" />
+      </div>
+      <div class="form-group">
+        <label for="newPassword">Nueva contraseña</label>
+        <input type="password" id="newPassword" />
+      </div>
+      <div class="form-group">
+        <label for="confirmNewPassword">Confirmar contraseña</label>
+        <input type="password" id="confirmNewPassword" />
+      </div>
+      <div class="flex" style="gap:0.5rem;">
+        <button id="savePasswordButton" class="btn-secondary">Guardar</button>
+        <button id="cancelPasswordButton" class="btn-danger">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para eliminar cuenta -->
+  <div id="deleteAccountModal">
+    <div class="modal-content">
+      <button class="modal-close" id="closeDeleteAccount">✕</button>
+      <h3>Eliminar cuenta</h3>
+      <p>Para confirmar la eliminación, escribe tu correo electrónico.</p>
+      <div class="form-group">
+        <input type="email" id="deleteAccountEmail" placeholder="tu@email.com" />
+      </div>
+      <div class="flex" style="gap:0.5rem;">
+        <button id="confirmDeleteAccountButton" class="btn-danger">Eliminar</button>
+        <button id="cancelDeleteAccountButton" class="btn-secondary">Cancelar</button>
+      </div>
+    </div>
+  </div>
+  <script src="js/app.js"></script>
+  <!-- Fondo neuronal animado sin dependencias externas -->
+  <script src="js/background.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      initTheme();
+      // Cargar datos del usuario actual
+      const current = await getCurrentUser();
+      if (!current) {
+        window.location.href = 'index.html';
+        return;
+      }
+      document.getElementById('employeeName').textContent = current.firstName;
+      document.getElementById('welcomeName').textContent = current.firstName;
+      if (current.role === 'admin') {
+        document.getElementById('adminLink').style.display = 'block';
+      }
+      // Mostrar grupos
+      const groups = await getGroupsOfUser(current.id);
+      const groupsEl = document.getElementById('employeeGroups');
+      groupsEl.innerHTML = '';
+      groups.forEach(g => {
+        const span = document.createElement('span');
+        span.className = 'badge';
+        span.textContent = g.name;
+        groupsEl.appendChild(span);
+      });
+      // Horarios
+      await updateTimeTable();
+      await updateClockButton();
+      // Obtener email completo para validación de contraseña
+      try {
+        const detail = await fetchUser(current.id);
+        window.currentUserEmail = detail.email;
+        // Mostrar foto de perfil en el card de bienvenida
+        const photoEl = document.getElementById('profilePhotoDisplay');
+        if (photoEl) {
+          if (detail.photoData) {
+            photoEl.src = detail.photoData;
+          } else {
+            // Mostrar imagen predeterminada si no hay foto
+            photoEl.src = 'dummy.png';
+          }
+        }
+      } catch (e) {
+        console.error('No se pudo obtener información completa del usuario');
+      }
+      // Renderizar calendario después de cargar horarios
+      await renderEmployeeCalendar();
+      document.getElementById('clockButton').addEventListener('click', async () => {
+        await toggleClock();
+        // actualizar calendario luego de clock
+        await renderEmployeeCalendar();
+      });
+      // Recibos
+      await updateReceiptsTable();
+      document.getElementById('receiptForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const category = document.getElementById('receiptCategory').value;
+        const amount = parseFloat(document.getElementById('receiptAmount').value);
+        const file = document.getElementById('receiptFile').files[0];
+        const note = document.getElementById('receiptNote').value.trim();
+        if (!file) return;
+        if (isNaN(amount)) {
+          alert('Ingrese un monto válido');
+          return;
+        }
+        try {
+          const imageData = await toBase64(file);
+          await addReceipt(current.id, category, amount, imageData, note);
+          this.reset();
+          // Reiniciar vista previa foto del recibo si existe
+          await updateReceiptsTable();
+        } catch (err) {
+          alert('Error al cargar el recibo');
+        }
+      });
+      // Modal acciones
+      document.getElementById('closeModal').addEventListener('click', closeModal);
+      document.getElementById('toggleDark').addEventListener('click', toggleTheme);
+
+      // Eventos para modal de día
+      document.getElementById('closeDayModal').addEventListener('click', closeDayModal);
+
+      // Configurar temporizador de inactividad para cerrar sesión automáticamente
+      if (window.setupInactivityTimer) {
+        window.setupInactivityTimer();
+      }
+
+      // Configuración de panel de ajustes para empleados
+      const settingsBtn = document.getElementById('employeeSettingsButton');
+      const settingsPanel = document.getElementById('employeeSettingsPanel');
+      const settingsClose = document.getElementById('employeeSettingsClose');
+      const changePwdBtn = document.getElementById('changePasswordButton');
+      const deleteAccBtn = document.getElementById('deleteAccountButton');
+      settingsBtn.addEventListener('click', () => {
+        settingsPanel.style.display = 'block';
+      });
+      settingsClose.addEventListener('click', () => {
+        settingsPanel.style.display = 'none';
+      });
+      // Abrir modales de cuenta
+      changePwdBtn.addEventListener('click', () => {
+        settingsPanel.style.display = 'none';
+        openChangePasswordModal();
+      });
+      deleteAccBtn.addEventListener('click', () => {
+        settingsPanel.style.display = 'none';
+        openDeleteAccountModal();
+      });
+
+      // Configurar acciones para el modal de cambiar contraseña
+      document.getElementById('closeChangePassword').addEventListener('click', closeChangePasswordModal);
+      document.getElementById('cancelPasswordButton').addEventListener('click', closeChangePasswordModal);
+      document.getElementById('savePasswordButton').addEventListener('click', async () => {
+        const currentPw = document.getElementById('currentPassword').value;
+        const newPw = document.getElementById('newPassword').value;
+        const confirmPw = document.getElementById('confirmNewPassword').value;
+        if (!currentPw || !newPw || !confirmPw) {
+          alert('Por favor complete todos los campos');
+          return;
+        }
+        if (newPw !== confirmPw) {
+          alert('La nueva contraseña y la confirmación no coinciden');
+          return;
+        }
+        const res = await updateUserPassword(current.id, currentPw, newPw);
+        if (res.success) {
+          alert('Contraseña actualizada correctamente');
+          closeChangePasswordModal();
+        } else {
+          alert(res.message || 'Error al cambiar la contraseña');
+        }
+      });
+      // Configurar acciones para el modal de eliminar cuenta
+      document.getElementById('closeDeleteAccount').addEventListener('click', closeDeleteAccountModal);
+      document.getElementById('cancelDeleteAccountButton').addEventListener('click', closeDeleteAccountModal);
+      document.getElementById('confirmDeleteAccountButton').addEventListener('click', async () => {
+        const emailInput = document.getElementById('deleteAccountEmail').value.trim().toLowerCase();
+        if (!emailInput) {
+          alert('Ingrese su correo electrónico para confirmar');
+          return;
+        }
+        const result = await deleteUserAccount(current.id, emailInput);
+        if (result.success) {
+          alert('Cuenta eliminada correctamente');
+          logout();
+          window.location.href = 'index.html';
+        } else {
+          alert(result.message || 'No se pudo eliminar la cuenta');
+        }
+      });
+
+      // Cerrar panel de ajustes de empleado al hacer clic fuera de él
+      document.addEventListener('click', (e) => {
+        const panel = document.getElementById('employeeSettingsPanel');
+        const btn = document.getElementById('employeeSettingsButton');
+        if (!panel || !btn) return;
+        if (panel.style.display === 'block') {
+          if (!panel.contains(e.target) && e.target !== btn) {
+            panel.style.display = 'none';
+          }
+        }
+      });
+
+      // Cerrar modales al hacer clic fuera de ellos
+      const receiptModal = document.getElementById('modal');
+      if (receiptModal) {
+        receiptModal.addEventListener('click', (ev) => {
+          if (ev.target === receiptModal) {
+            closeModal();
+          }
+        });
+      }
+      const dayModalEl = document.getElementById('dayModal');
+      if (dayModalEl) {
+        dayModalEl.addEventListener('click', (ev) => {
+          if (ev.target === dayModalEl) {
+            closeDayModal();
+          }
+        });
+      }
+      const changePwdModal = document.getElementById('changePasswordModal');
+      if (changePwdModal) {
+        changePwdModal.addEventListener('click', (ev) => {
+          if (ev.target === changePwdModal) {
+            closeChangePasswordModal();
+          }
+        });
+      }
+      const deleteAccModal = document.getElementById('deleteAccountModal');
+      if (deleteAccModal) {
+        deleteAccModal.addEventListener('click', (ev) => {
+          if (ev.target === deleteAccModal) {
+            closeDeleteAccountModal();
+          }
+        });
+      }
+    });
+
+    // Renderiza el calendario del empleado para el mes actual
+    async function renderEmployeeCalendar() {
+      const calendarEl = document.getElementById('employeeCalendar');
+      if (!calendarEl) return;
+      // Asegurar que se hayan actualizado los horarios
+      const times = window.currentTimes || [];
+      // Obtener conjunto de días trabajados
+      const marks = {};
+      times.forEach(t => {
+        const dIn = new Date(t.clockIn);
+        const dInStr = dIn.toISOString().substring(0, 10);
+        marks[dInStr] = true;
+        if (t.clockOut) {
+          const dOut = new Date(t.clockOut);
+          const dOutStr = dOut.toISOString().substring(0, 10);
+          marks[dOutStr] = true;
+        }
+      });
+      // Obtener fecha actual
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth();
+      // Construir calendario
+      const weekDays = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+      let html = '';
+      weekDays.forEach(w => {
+        html += `<div class="week-day">${w}</div>`;
+      });
+      const firstDay = new Date(year, month, 1).getDay();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      // huecos antes del primer día
+      for (let i = 0; i < firstDay; i++) {
+        html += '<div class="day empty"></div>';
+      }
+      // Celdas de días
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        const worked = marks[dateStr] ? 'worked' : '';
+        html += `<div class="day ${worked}" data-date="${dateStr}">${d}</div>`;
+      }
+      calendarEl.innerHTML = html;
+      // Asignar evento click
+      calendarEl.querySelectorAll('.day').forEach(cell => {
+        if (!cell.classList.contains('empty')) {
+          cell.addEventListener('click', () => {
+            openDayModal(cell.getAttribute('data-date'));
+          });
+        }
+      });
+    }
+
+    let selectedDay = null;
+
+    // Abre el modal para un día específico
+    async function openDayModal(dateStr) {
+      selectedDay = dateStr;
+      const modal = document.getElementById('dayModal');
+      if (!modal) return;
+      modal.style.display = 'flex';
+      // título con formato local
+      const date = new Date(dateStr);
+      document.getElementById('dayModalTitle').textContent = date.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      document.getElementById('dayPassword').value = '';
+      // Filtrar horarios del día
+      const times = window.currentTimes || [];
+      const dayTimes = times.filter(t => {
+        const inDateStr = new Date(t.clockIn).toISOString().substring(0, 10);
+        const outDateStr = t.clockOut ? new Date(t.clockOut).toISOString().substring(0, 10) : null;
+        return inDateStr === dateStr || outDateStr === dateStr;
+      });
+      let html = '';
+      if (dayTimes.length > 0) {
+        html += '<table><thead><tr><th>Entrada</th><th>Salida</th><th>Horas</th></tr></thead><tbody>';
+        dayTimes.forEach(rec => {
+          const start = formatDateTime(rec.clockIn);
+          const end = rec.clockOut ? formatDateTime(rec.clockOut) : '—';
+          const hours = rec.clockOut ? calcHours(rec.clockIn, rec.clockOut).toFixed(2) : '—';
+          html += `<tr><td>${start}</td><td>${end}</td><td>${hours}</td></tr>`;
+        });
+        html += '</tbody></table>';
+      } else {
+        html = '<p>No hay registros para este día.</p>';
+      }
+      document.getElementById('dayTimesContainer').innerHTML = html;
+      // Determinar estado del botón
+      let showFinish = false;
+      if (times.length > 0) {
+        const last = times[times.length - 1];
+        if (!last.clockOut) {
+          const lastDate = new Date(last.clockIn).toISOString().substring(0, 10);
+          if (lastDate === dateStr) showFinish = true;
+        }
+      }
+      const btn = document.getElementById('dayClockButton');
+      btn.textContent = showFinish ? 'Finalizar jornada' : 'Iniciar jornada';
+      btn.onclick = async () => {
+        const pwd = document.getElementById('dayPassword').value;
+        if (!pwd) {
+          alert('Ingrese su contraseña');
+          return;
+        }
+        if (!window.currentUserEmail) {
+          alert('No se puede validar usuario actual');
+          return;
+        }
+        const verify = await login(window.currentUserEmail, pwd);
+        if (!verify.success) {
+          alert('Contraseña incorrecta');
+          return;
+        }
+        // Realizar toggle de clock
+        await toggleClock();
+        await renderEmployeeCalendar();
+        closeDayModal();
+      };
+    }
+
+    // Abre el modal para cambiar contraseña
+    function openChangePasswordModal() {
+      const modal = document.getElementById('changePasswordModal');
+      if (!modal) return;
+      modal.style.display = 'flex';
+      document.getElementById('currentPassword').value = '';
+      document.getElementById('newPassword').value = '';
+      document.getElementById('confirmNewPassword').value = '';
+    }
+    // Cierra el modal de cambio de contraseña
+    function closeChangePasswordModal() {
+      const modal = document.getElementById('changePasswordModal');
+      if (modal) modal.style.display = 'none';
+    }
+    // Abre el modal para eliminar cuenta
+    function openDeleteAccountModal() {
+      const modal = document.getElementById('deleteAccountModal');
+      if (!modal) return;
+      modal.style.display = 'flex';
+      document.getElementById('deleteAccountEmail').value = '';
+    }
+    // Cierra el modal de eliminación de cuenta
+    function closeDeleteAccountModal() {
+      const modal = document.getElementById('deleteAccountModal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    function closeDayModal() {
+      const modal = document.getElementById('dayModal');
+      if (modal) modal.style.display = 'none';
+    }
+  </script>
+</body>
+</html>

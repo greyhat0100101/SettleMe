@@ -1,0 +1,884 @@
+/* 
+ * Estilos principales para SettleMe.
+ * Uso de variables CSS para soportar modo claro y oscuro.
+ */
+
+:root {
+  /* Paleta de colores en modo claro */
+  --primary-color: #0d6efd;
+  --secondary-color: #6c757d;
+  --bg-color: #f8f9fa;
+  --surface-color: #ffffff;
+  --text-color: #212529;
+  --accent-color: #17a2b8;
+  --error-color: #dc3545;
+  --success-color: #198754;
+  --border-radius: 12px;
+  --card-hover-lift: 4px;
+  --card-shadow: rgba(0, 0, 0, 0.06);
+  --card-shadow-hover: rgba(0, 0, 0, 0.12);
+  /* Nuevas variables para tarjetas con efecto vidrio */
+  --card-bg: rgba(255, 255, 255, 0.8);
+  --card-border: rgba(0, 0, 0, 0.1);
+}
+
+/* Sobrescribir variables para modo oscuro */
+body.dark-mode {
+  --bg-color: #121212;
+  --surface-color: #2e2e2e;
+  --text-color: #e1e1e1;
+  --secondary-color: #9e9e9e;
+  --accent-color: #0dcaf0;
+  --error-color: #e06666;
+  --success-color: #28a745;
+  /* colores de sombra para modo oscuro */
+  --card-shadow: rgba(0, 0, 0, 0.3);
+  --card-shadow-hover: rgba(0, 0, 0, 0.5);
+
+  /* Ajustes de tarjetas en modo oscuro */
+  --card-bg: rgba(30, 30, 30, 0.8);
+  --card-border: rgba(255, 255, 255, 0.15);
+}
+
+/* Reset global básico */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  /* El fondo de la página es negro para resaltar la animación neuronal. */
+  background-color: #000;
+  color: var(--text-color);
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Encabezado y navegación */
+/*
+ * Estilizamos el encabezado para que utilice el mismo efecto de vidrio que las tarjetas.
+ * Se utiliza un fondo semitransparente y desenfoque para permitir que el fondo 3D
+ * sea visible. El sombreado proporciona profundidad y mantiene la legibilidad.
+ */
+header {
+  /* Fondo translúcido adaptable al modo claro/oscuro */
+  background-color: var(--card-bg);
+  border-bottom: 1px solid var(--card-border);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 1rem 2rem;
+  /* Sombra para dar profundidad y separar del fondo */
+  box-shadow: 0 2px 8px var(--card-shadow);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+header .nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+header .nav .brand {
+  font-weight: bold;
+  font-size: 1.5rem;
+  color: var(--primary-color);
+  text-decoration: none;
+}
+
+header .nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+
+header .nav ul li {
+  margin-left: 1rem;
+}
+
+header .nav ul li a {
+  color: var(--text-color);
+  text-decoration: none;
+  font-size: 1rem;
+  transition: color 0.2s;
+}
+
+header .nav ul li a:hover {
+  color: var(--primary-color);
+}
+
+/* Contenedor principal */
+.container {
+  width: 100%;
+  max-width: 900px;
+  margin: 2rem auto;
+  padding: 0 1.5rem;
+  flex: 1;
+}
+
+/*
+ * Tarjetas modernas con efecto vidrio. Utilizamos un fondo semitransparente y
+ * desenfoque, además de un borde sutil. El sombreado se mantiene para
+ * proporcionar sensación de profundidad. El levantamiento al hacer hover se
+ * mantiene, aportando interacción y sensación 3D.
+ */
+.card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--border-radius);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  /* Sombra más marcada para resaltar la tarjeta */
+  box-shadow: 0 4px 12px var(--card-shadow);
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Efecto de elevación al pasar el mouse por las tarjetas */
+.card:hover {
+  transform: translateY(calc(-1 * var(--card-hover-lift)));
+  box-shadow: 0 6px 18px var(--card-shadow-hover);
+}
+
+.card h2 {
+  margin-top: 0;
+  font-size: 1.4rem;
+}
+
+/* Formularios */
+form {
+  display: flex;
+  flex-direction: column;
+}
+
+form .form-group {
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+}
+
+form .form-group label {
+  font-size: 0.95rem;
+  margin-bottom: 0.35rem;
+  font-weight: 600;
+}
+
+form .form-group input,
+form .form-group select,
+form .form-group textarea {
+  padding: 0.75rem;
+  border-radius: var(--border-radius);
+  border: 1px solid rgba(0,0,0,0.1);
+  background-color: var(--surface-color);
+  color: var(--text-color);
+  font-size: 1rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+/* Estilo para opciones deshabilitadas en listas desplegables */
+select option:disabled {
+  color: var(--secondary-color);
+}
+
+form .form-group input:focus,
+form .form-group select:focus,
+form .form-group textarea:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(13,110,253,0.25);
+}
+
+form .form-group input[type="file"] {
+  padding: 0.5rem 0;
+}
+
+form button {
+  background-color: var(--primary-color);
+  color: #fff;
+  border: none;
+  border-radius: calc(var(--border-radius) * 0.75);
+  /* Botones de formularios más compactos para ocupar menos espacio en móviles */
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: filter 0.2s, transform 0.1s;
+  align-self: flex-start;
+}
+
+form button:hover {
+  /* Ligero oscurecimiento al pasar el mouse */
+  filter: brightness(0.9);
+}
+form button:active {
+  transform: scale(0.97);
+}
+
+/* Tablas */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+}
+
+table th,
+table td {
+  /* Reducir tamaño de fuente y espaciado en tablas para adaptarse mejor a pantallas pequeñas */
+  padding: 0.6rem 0.45rem;
+  border-bottom: 1px solid rgba(0,0,0,0.1);
+  text-align: left;
+  font-size: 0.8rem;
+}
+
+table thead {
+  background-color: var(--surface-color);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  font-weight: 600;
+}
+
+table tbody tr:nth-child(even) {
+  background-color: rgba(0, 0, 0, 0.015);
+}
+
+table tbody tr:hover {
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+/* Botones secundarios */
+.btn-secondary {
+  background-color: var(--secondary-color);
+  color: #fff;
+  border: none;
+  border-radius: calc(var(--border-radius) * 0.75);
+  /* Reducir tamaño y relleno de botones secundarios para adaptarse a pantallas pequeñas */
+  padding: 0.35rem 0.7rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: filter 0.2s, transform 0.1s;
+}
+
+.btn-secondary:hover {
+  filter: brightness(0.9);
+  transform: translateY(-1px);
+}
+
+.btn-danger {
+  background-color: var(--error-color);
+  color: #fff;
+  border: none;
+  border-radius: calc(var(--border-radius) * 0.75);
+  /* Reducir tamaño y relleno de botones de advertencia */
+  padding: 0.35rem 0.7rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: filter 0.2s, transform 0.1s;
+}
+
+.btn-danger:hover {
+  filter: brightness(0.9);
+  transform: translateY(-1px);
+}
+
+/* Badge para grupos */
+.badge {
+  display: inline-block;
+  padding: 0.3em 0.7em;
+  font-size: 0.8rem;
+  color: #fff;
+  background-color: var(--primary-color);
+  border-radius: calc(var(--border-radius) * 0.5);
+  margin-right: 0.3rem;
+}
+
+/* Contenedor de tablas scrollable */
+.table-responsive {
+  overflow-x: auto;
+  width: 100%;
+}
+
+/* Mensajes */
+.message {
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  border-radius: var(--border-radius);
+  color: #fff;
+}
+.message.success {
+  background-color: var(--success-color);
+}
+.message.error {
+  background-color: var(--error-color);
+}
+
+/* Calendario */
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.3rem;
+  margin-top: 0.5rem;
+}
+.calendar-grid .week-day {
+  font-weight: 600;
+  text-align: center;
+  padding: 0.3rem 0;
+}
+.calendar-grid .day {
+  padding: 0.6rem 0.3rem;
+  text-align: center;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  background-color: var(--surface-color);
+  box-shadow: 0 1px 3px var(--card-shadow);
+  transition: filter 0.2s;
+  position: relative;
+}
+.calendar-grid .day.worked {
+  background-color: var(--accent-color);
+  color: #fff;
+}
+
+/* Días programados (en schedule) para admin */
+.calendar-grid .day.scheduled {
+  border: 2px dashed var(--accent-color);
+  /* mantener fondo base */
+}
+.calendar-grid .day.worked.scheduled {
+  /* Si el día tiene registros y además está programado, mostrar sombra extra */
+  box-shadow: 0 0 0 2px var(--accent-color) inset;
+}
+.calendar-grid .day.empty {
+  visibility: hidden;
+}
+.calendar-grid .day:hover {
+  filter: brightness(0.95);
+}
+
+/* Indicadores de conteo para días con registros y programación */
+.calendar-grid .day .count {
+  position: absolute;
+  font-size: 0.65rem;
+  line-height: 1;
+  padding: 2px 4px;
+  border-radius: 8px;
+  color: #fff;
+}
+
+/* Número del día dentro de cada celda del calendario */
+.calendar-grid .day .date-num {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.2rem;
+}
+
+/*
+ * Menú desplegable para acciones en tablas.
+ * Cada fila puede contener un botón de tres puntos que abre un menú con
+ * varias opciones (exportar CSV/PDF, editar, etc.). El menú se
+ * muestra con estilo de tarjeta y se oculta por defecto. El contenedor
+ * `.dropdown` se posiciona de manera relativa para que el menú se
+ * posicione absolutamente respecto a él. Estas reglas se reutilizan
+ * en la tabla de empleados, deudas y en la lista de grupos.
+ */
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-button {
+  background: transparent;
+  border: none;
+  color: var(--primary-color);
+  font-size: 1.2rem;
+  line-height: 1;
+  padding: 0.2rem 0.4rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: background 0.2s ease;
+}
+.dropdown-button:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: var(--surface-color);
+  border: 1px solid var(--card-border);
+  border-radius: var(--border-radius);
+  box-shadow: 0 4px 12px var(--card-shadow);
+  min-width: 160px;
+  z-index: 200;
+  display: none;
+  padding: 0.25rem 0;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  display: none;
+  flex-direction: column;
+  animation: fadeIn 0.15s ease-in-out;
+  transform-origin: top right;
+}
+
+.dropdown-menu button,
+.dropdown-menu a {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: 100%;
+  padding: 0.5rem 0.8rem;
+  border: none;
+  background: none;
+  color: var(--text-color);
+  font-size: 0.85rem;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.dropdown-menu button:hover,
+.dropdown-menu a:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* Estilo para opciones destructivas dentro del menú */
+.dropdown-menu .danger-option,
+.dropdown-menu button.danger {
+  color: var(--error-color);
+  font-weight: 600;
+}
+.dropdown-menu .danger-option:hover,
+.dropdown-menu button.danger:hover {
+  background-color: rgba(220, 53, 69, 0.1);
+}
+
+/* Mostrar menú cuando el contenedor tenga clase open */
+.dropdown.open .dropdown-menu {
+  display: flex;
+}
+
+/* Animación */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.calendar-grid .day .working-count {
+  background-color: var(--accent-color);
+  top: 2px;
+  right: 2px;
+}
+.calendar-grid .day .schedule-count {
+  background-color: var(--success-color);
+  bottom: 2px;
+  right: 2px;
+}
+
+/* Modal para días */
+/* Modales de superposición. Añadir nuevos modales de contraseña y eliminación de cuenta aquí */
+/* Modales de superposición para páginas. Incluimos nuevos modales de horas y recibos. */
+#dayModal, #adminDayModal, #payModal, #changePasswordModal, #deleteAccountModal, #hoursModal, #receiptsModal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.6);
+  justify-content: center;
+  align-items: center;
+  z-index: 200;
+}
+
+/* Estilo para el selector de foto de perfil en el registro */
+.profile-picture-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.profile-picture {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 2px solid var(--primary-color);
+  background-color: #ccc;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-picture img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: none;
+}
+
+.profile-picture .placeholder {
+  font-size: 2.5rem;
+  color: var(--text-color);
+}
+
+.profile-picture::after {
+  content: 'Cambiar foto';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  font-size: 0.7rem;
+  text-align: center;
+  padding: 0.2rem 0;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.profile-picture:hover::after {
+  opacity: 1;
+}
+
+/* Foto de perfil para mostrar en el panel de empleado */
+.profile-photo-display {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: 2px solid var(--primary-color);
+  object-fit: cover;
+  display: block;
+  margin: 0 auto 0.5rem;
+}
+
+/* Logo de la compañía en el encabezado */
+.company-logo {
+  /* Tamaño del logo en el encabezado. Más grande según solicitud */
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  margin-right: 0.5rem;
+}
+
+.modal-content {
+  background-color: var(--surface-color);
+  border-radius: var(--border-radius);
+  padding: 1rem;
+  max-width: 90%;
+  max-height: 90%;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 4px 12px var(--card-shadow);
+}
+.modal-content h3 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+}
+.modal-close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: none;
+  border: none;
+  /* Icono de cierre más pequeño para iPhone */
+  font-size: 1rem;
+  cursor: pointer;
+  color: var(--text-color);
+}
+.modal-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+}
+.modal-content table th,
+.modal-content table td {
+  padding: 0.5rem;
+  border-bottom: 1px solid rgba(0,0,0,0.1);
+  text-align: left;
+  font-size: 0.85rem;
+}
+
+/* Toggle de modo oscuro */
+.dark-toggle {
+  cursor: pointer;
+  /* Botones icono más pequeños para iPhone */
+  font-size: 1rem;
+  border: none;
+  background: none;
+  color: var(--text-color);
+  padding: 0.15rem;
+}
+
+/* Enlaces de acción pequeños (iconos) */
+.action-link {
+  color: var(--primary-color);
+  cursor: pointer;
+  text-decoration: underline;
+  font-size: 0.8rem;
+}
+
+/* Panel de configuración para admin */
+.settings-panel {
+  position: fixed;
+  top: 70px;
+  right: 1rem;
+  z-index: 300;
+  background-color: var(--card-bg);
+  border: 1px solid var(--card-border);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  padding: 1rem;
+  border-radius: var(--border-radius);
+  box-shadow: 0 4px 12px var(--card-shadow);
+  width: 340px;
+  display: none;
+  /* Altura máxima relativa a la ventana; se evita el scroll en la mayoría de los casos */
+  max-height: 85vh;
+  overflow-y: visible;
+}
+.settings-panel h3 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+}
+.settings-panel .form-group {
+  margin-bottom: 0.75rem;
+}
+.settings-panel label {
+  display: block;
+  margin-bottom: 0.25rem;
+}
+.settings-panel input[type="range"] {
+  width: 100%;
+}
+
+/*
+ * Diseño de pestañas para el panel de configuración.
+ * Cada pestaña es un botón que cambia el contenido mostrado.
+ */
+/*
+ * Contenedor de la barra de pestañas con flechas. Permite desplazamiento
+ * horizontal mediante botones. El contenedor interno de pestañas (tabs)
+ * puede desplazarse ocultando los scrollbars por defecto.
+ */
+.settings-panel .tabs-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid var(--card-border);
+}
+.settings-panel .tabs {
+  display: flex;
+  flex: 1;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+.settings-panel .tabs::-webkit-scrollbar {
+  display: none; /* Ocultar scrollbars en Webkit */
+}
+.settings-panel .tab {
+  flex: 0 0 auto;
+  text-align: center;
+  /* Pestañas aún más compactas para pantallas pequeñas */
+  padding: 0.3rem 0.5rem;
+  cursor: pointer;
+  background: none;
+  border: none;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-color);
+  border-bottom: 2px solid transparent;
+  transition: color 0.2s, border-color 0.2s;
+  margin: 0 0.2rem;
+}
+.settings-panel .tab:hover {
+  color: var(--primary-color);
+}
+.settings-panel .tab.active {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+/* Flechas para desplazar las pestañas horizontalmente */
+.settings-panel .tab-arrow {
+  background: none;
+  border: none;
+  /* Flechas de desplazamiento aún más compactas */
+  font-size: 0.9rem;
+  color: var(--text-color);
+  cursor: pointer;
+  padding: 0.2rem 0.35rem;
+  transition: color 0.2s;
+}
+.settings-panel .tab-arrow:hover {
+  color: var(--primary-color);
+}
+/* Contenedores de contenido de las pestañas. Se muestran u ocultan vía JavaScript */
+.tab-content {
+  display: none;
+  /* Ajustamos el margen entre secciones para alinearse al contenedor */
+  margin-bottom: 1rem;
+}
+
+/*
+ * Navegación por pestañas en el panel de administración. Similar a las pestañas de
+ * configuración, pero ligeramente más grandes y visibles para organizar
+ * secciones como empleados, grupos, calendario y deudas. Las flechas
+ * permiten desplazar las pestañas horizontalmente en pantallas estrechas.
+ */
+.admin-tabs-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--card-border);
+}
+.admin-tabs {
+  display: flex;
+  flex: 1;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.admin-tabs::-webkit-scrollbar {
+  display: none;
+}
+.admin-tab {
+  flex: 0 0 auto;
+  text-align: center;
+  padding: 0.4rem 0.8rem;
+  cursor: pointer;
+  background: none;
+  border: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-color);
+  border-bottom: 2px solid transparent;
+  transition: color 0.2s, border-color 0.2s;
+  margin: 0 0.3rem;
+}
+.admin-tab:hover {
+  color: var(--primary-color);
+}
+.admin-tab.active {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+.admin-tab-arrow {
+  background: none;
+  border: none;
+  font-size: 1rem;
+  color: var(--text-color);
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  transition: color 0.2s;
+}
+.admin-tab-arrow:hover {
+  color: var(--primary-color);
+}
+/* Secciones del panel de administración. Se ocultan por defecto y se muestran
+   cuando la pestaña correspondiente está activa. */
+.admin-section {
+  display: none;
+}
+.admin-section.active {
+  display: block;
+}
+
+/* Flex utilities */
+.flex {
+  display: flex;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.align-center {
+  align-items: center;
+}
+
+/* Responsividad */
+@media (max-width: 600px) {
+  header .nav ul li {
+    margin-left: 0.5rem;
+  }
+  table th,
+  table td {
+    font-size: 0.75rem;
+  }
+
+  header .nav {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  header .nav ul {
+    margin-top: 0.5rem;
+    width: 100%;
+    justify-content: flex-start;
+  }
+  header .nav ul li {
+    margin-left: 0;
+    margin-right: 1rem;
+  }
+  .container {
+    padding: 0 1rem;
+  }
+}
+
+/* Personalizaciones específicas para modo oscuro */
+body.dark-mode form .form-group input,
+body.dark-mode form .form-group select,
+body.dark-mode form .form-group select,
+body.dark-mode form .form-group textarea {
+  background-color: #3c3c3c;
+  border-color: #777;
+  color: var(--text-color);
+}
+
+body.dark-mode form .form-group input {
+  background-color: #404040;
+  border-color: #777;
+  color: var(--text-color);
+}
+
+body.dark-mode table tbody tr:nth-child(even) {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+body.dark-mode table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+/*
+ * Ajustes específicos para la tabla de empleados en el panel de administración.
+ * Se reduce el tamaño de fuente de celdas y cabeceras y el tamaño de los
+ * botones para que la información sea más compacta y legible.
+ */
+#employeesTable th,
+#employeesTable td {
+  font-size: 0.85rem;
+  padding: 0.4rem 0.5rem;
+}
+#employeesTable button {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+}

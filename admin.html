@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SettleMe – Panel de administración</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header>
+    <div class="nav">
+      <!-- Logo de la compañía en lugar del texto de marca -->
+      <img id="companyLogo" class="company-logo" src="" alt="Logo">
+      <ul>
+        <li><span id="adminName"></span></li>
+        <li><button id="toggleDark" class="dark-toggle" title="Alternar modo oscuro">🌙</button></li>
+        <li><a href="index.html" class="action-link" onclick="logout()">Cerrar sesión</a></li>
+        <li><button id="settingsButton" class="dark-toggle" title="Configuración">⚙</button></li>
+      </ul>
+    </div>
+  </header>
+  <main class="container">
+    <!-- Navegación por secciones del panel de administración -->
+    <div class="admin-tabs-wrapper">
+      <button type="button" class="admin-tab-arrow" data-dir="left">‹</button>
+      <div class="admin-tabs">
+        <button type="button" class="admin-tab active" data-target="employeesSection">Empleados</button>
+        <button type="button" class="admin-tab" data-target="groupsSection">Grupos</button>
+        <button type="button" class="admin-tab" data-target="calendarSection">Calendario</button>
+        <button type="button" class="admin-tab" data-target="debtsSection">Deudas</button>
+      </div>
+      <button type="button" class="admin-tab-arrow" data-dir="right">›</button>
+    </div>
+    <!-- Sección de empleados (incluye tabla, filtros y recibos de grupo) -->
+    <section id="employeesSection" class="admin-section active">
+      <div class="card">
+        <h2>Empleados</h2>
+        <!-- Controles de búsqueda y filtrado -->
+        <div class="flex align-center" style="margin-bottom: 1rem; gap: 0.5rem; flex-wrap: wrap;">
+          <div class="form-group" style="margin:0;">
+            <label for="filterName" style="margin:0 0 0.25rem 0;">Buscar por nombre o correo:</label>
+            <input type="text" id="filterName" placeholder="Ingrese nombre o correo" style="min-width:180px;">
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label for="filterGroup" style="margin:0 0 0.25rem 0;">Filtrar por grupo:</label>
+            <select id="filterGroup">
+              <option value="">Todos</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-responsive">
+          <table id="employeesTable">
+            <thead>
+              <tr>
+              <th>Nombre</th>
+                <th>Email</th>
+                <th>Grupos</th>
+                <th>Tipo de pago</th>
+                <th>Tarifa</th>
+                <!-- Unificar acciones en un solo menú desplegable -->
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <!-- Recibos del grupo seleccionados -->
+      <div class="card" id="groupReceiptsCard" style="display:none;">
+        <h2>Recibos del grupo</h2>
+        <!-- Tabla para mostrar recibos de los empleados del grupo -->
+        <div id="groupReceiptsContainer" class="table-responsive"></div>
+      </div>
+    </section>
+    <!-- Sección de grupos -->
+    <section id="groupsSection" class="admin-section" style="display:none;">
+      <div class="card">
+        <h2>Grupos</h2>
+        <button class="btn-secondary" onclick="window.location.href='group.html'">Gestionar grupos</button>
+        <div id="groupsList" style="margin-top:1rem;"></div>
+      </div>
+    </section>
+    <!-- Sección de calendario -->
+    <section id="calendarSection" class="admin-section" style="display:none;">
+      <div class="card" id="adminCalendarCard">
+        <h2>Calendario</h2>
+        <div id="adminCalendar" class="calendar-grid"></div>
+      </div>
+    </section>
+    <!-- Sección de deudas de empleados -->
+    <section id="debtsSection" class="admin-section" style="display:none;">
+      <div class="card" id="debtCard">
+        <h2>Deudas de empleados</h2>
+        <div class="table-responsive">
+          <table id="debtTable">
+            <thead>
+              <tr>
+                <th>Empleado</th>
+                <th>Horas trabajadas</th>
+                <th>Monto horas (USD)</th>
+                <th>Recibos</th>
+                <th>Monto recibos (USD)</th>
+                <th>Total adeudado (USD)</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+  <!-- Modal para detalles del día (admin) -->
+  <div id="adminDayModal">
+    <div class="modal-content">
+      <button class="modal-close" id="closeAdminDayModal">✕</button>
+      <h3 id="adminDayModalTitle">Día</h3>
+      <div id="adminDayList"></div>
+    </div>
+  </div>
+
+  <!-- Modal para editar pago -->
+  <div id="payModal">
+    <div class="modal-content">
+      <button class="modal-close" id="closePayModal">✕</button>
+      <h3>Editar pago de <span id="payUserName"></span></h3>
+      <div class="form-group">
+        <label for="editPayType">Tipo de pago</label>
+        <select id="editPayType">
+          <option value="hora">Por hora</option>
+          <option value="dia">Por día</option>
+          <option value="salario">Salario mensual</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="editPayRate">Tarifa/Pago</label>
+        <input type="number" id="editPayRate" step="0.01">
+      </div>
+      <div class="flex" style="gap:0.5rem;">
+        <button class="btn-secondary" id="savePayButton">Guardar</button>
+        <button class="btn-danger" id="cancelPayButton">Cancelar</button>
+      </div>
+    </div>
+  </div>
+  <!-- Panel de configuración (oculto por defecto) con pestañas -->
+  <div id="settingsPanel" class="settings-panel">
+    <!-- Barra de pestañas con flechas de desplazamiento -->
+    <div class="tabs-wrapper">
+      <button type="button" class="tab-arrow" data-dir="left">‹</button>
+      <div class="tabs">
+        <button type="button" class="tab active" data-target="bgTab">Fondo</button>
+        <button type="button" class="tab" data-target="uiTab">Interfaz</button>
+        <button type="button" class="tab" data-target="securityTab">Seguridad</button>
+        <button type="button" class="tab" data-target="logoTab">Logo</button>
+      </div>
+      <button type="button" class="tab-arrow" data-dir="right">›</button>
+    </div>
+    <!-- Contenido de la pestaña de fondo -->
+    <div id="bgTab" class="tab-content" style="display:block;">
+      <h3>Configuración de fondo</h3>
+      <div class="form-group">
+        <label for="nodeCountSlider">Número de neuronas</label>
+        <input type="range" id="nodeCountSlider" min="50" max="300" value="120">
+      </div>
+      <div class="form-group">
+        <label for="rotationSpeedSlider">Velocidad de rotación</label>
+        <input type="range" id="rotationSpeedSlider" min="1" max="20" value="2">
+      </div>
+      <div class="form-group">
+        <label for="colorSpeedSlider">Velocidad de cambio de color</label>
+        <input type="range" id="colorSpeedSlider" min="1" max="20" value="2">
+      </div>
+      <div class="form-group">
+        <label for="pulseFreqSlider">Frecuencia de pulsos</label>
+        <input type="range" id="pulseFreqSlider" min="1" max="20" value="5">
+      </div>
+    </div>
+    <!-- Contenido de la pestaña de interfaz -->
+    <div id="uiTab" class="tab-content">
+      <h3>Configuración de interfaz</h3>
+      <div class="form-group">
+        <label for="cardOpacitySlider">Transparencia de tarjetas (%)</label>
+        <input type="range" id="cardOpacitySlider" min="20" max="100" value="60">
+      </div>
+    </div>
+    <!-- Contenido de la pestaña de seguridad -->
+    <div id="securityTab" class="tab-content">
+      <h3>Configuración de seguridad</h3>
+      <div class="form-group">
+        <label for="inactivitySlider">Tiempo de inactividad (minutos)</label>
+        <input type="range" id="inactivitySlider" min="1" max="30" value="1">
+      </div>
+    </div>
+    <!-- Contenido de la pestaña de logo -->
+    <div id="logoTab" class="tab-content">
+      <h3>Logo de la compañía</h3>
+      <div class="form-group">
+        <label for="companyLogoInput">Seleccionar logo</label>
+        <input type="file" id="companyLogoInput" accept="image/*">
+      </div>
+      <button id="saveCompanyLogo" class="btn-secondary" style="width:100%; margin-bottom:0.5rem;">Guardar logo</button>
+    </div>
+    <!-- Botón de cierre general del panel -->
+    <button id="closeSettings" class="btn-secondary" style="width:100%;">Cerrar</button>
+  </div>
+  <!-- Modal para ver horas detalladas de un empleado -->
+  <div id="hoursModal">
+    <div class="modal-content">
+      <button class="modal-close" id="closeHoursModal">✕</button>
+      <h3>Horas de <span id="hoursUserName"></span></h3>
+      <div id="hoursTableContainer" class="table-responsive"></div>
+    </div>
+  </div>
+  <!-- Modal para ver recibos detallados de un empleado -->
+  <div id="receiptsModal">
+    <div class="modal-content">
+      <button class="modal-close" id="closeReceiptsModal">✕</button>
+      <h3>Recibos de <span id="receiptsUserName"></span></h3>
+      <div id="receiptsTableContainer" class="table-responsive"></div>
+    </div>
+  </div>
+  <script src="js/app.js"></script>
+  <!-- Fondo neuronal animado sin dependencias externas -->
+  <script src="js/background.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Inicializar tema (claro/oscuro)
+      initTheme();
+      const current = await getCurrentUser();
+      // Verificar que es admin
+      if (!current || current.role !== 'admin') {
+        window.location.href = 'index.html';
+        return;
+      }
+      document.getElementById('adminName').textContent = current.firstName;
+
+      // Cargar logo de la compañía y mostrarlo en el encabezado
+      try {
+        const logo = await getCompanyLogo();
+        if (logo) {
+          document.getElementById('companyLogo').src = logo;
+        }
+      } catch (e) {
+        console.error('Error al cargar logo', e);
+      }
+
+      // Poblar filtro de grupos y cargar empleados
+      await populateGroupFilter();
+      const filterSelect = document.getElementById('filterGroup');
+      const filterName = document.getElementById('filterName');
+      // Función auxiliar para recargar empleados y recibos según filtros
+      async function refreshList() {
+        const groupId = filterSelect.value;
+        const search = (filterName.value || '').trim().toLowerCase();
+        await loadEmployees(groupId, search);
+        // Mostrar recibos del grupo si hay selección de grupo
+        if (groupId) {
+          await loadGroupReceipts(groupId);
+        } else {
+          const card = document.getElementById('groupReceiptsCard');
+          if (card) card.style.display = 'none';
+        }
+        // Actualizar tabla de deudas al recargar listas
+        await loadDebtTable(groupId, search);
+      }
+      await refreshList();
+      filterSelect.addEventListener('change', refreshList);
+      filterName.addEventListener('input', refreshList);
+
+      // Cargar grupos para el panel inferior
+      await loadGroups();
+      // Renderizar calendario del administrador
+      await renderAdminCalendar();
+
+      // Control de modo oscuro
+      document.getElementById('toggleDark').addEventListener('click', toggleTheme);
+      // Cerrar modal de día del admin
+      document.getElementById('closeAdminDayModal').addEventListener('click', closeAdminDayModal);
+
+      // Temporizador de inactividad
+      if (window.setupInactivityTimer) {
+        window.setupInactivityTimer();
+      }
+
+      // Abrir/cerrar panel de configuración
+      const settingsBtn = document.getElementById('settingsButton');
+      const settingsPanel = document.getElementById('settingsPanel');
+      const closeSettingsBtn = document.getElementById('closeSettings');
+      settingsBtn.addEventListener('click', () => {
+        settingsPanel.style.display = 'block';
+      });
+      closeSettingsBtn.addEventListener('click', () => {
+        settingsPanel.style.display = 'none';
+      });
+      // Sliders de configuración de fondo
+      const nodeSlider = document.getElementById('nodeCountSlider');
+      const rotationSlider = document.getElementById('rotationSpeedSlider');
+      const colorSlider = document.getElementById('colorSpeedSlider');
+      const pulseSlider = document.getElementById('pulseFreqSlider');
+      // Sliders adicionales para opacidad y seguridad
+      const cardOpacitySlider = document.getElementById('cardOpacitySlider');
+      const inactivitySlider = document.getElementById('inactivitySlider');
+      // Inicializar controles según configuraciones actuales
+      function initSettingsControls() {
+        const bgSettings = window.backgroundSettings || {};
+        nodeSlider.value = bgSettings.nodeCount || 120;
+        rotationSlider.value = Math.round((bgSettings.rotationSpeed || 0.002) * 2000);
+        colorSlider.value = Math.round((bgSettings.colorSpeed || 0.2) * 5);
+        pulseSlider.value = Math.round((bgSettings.pulseFrequency || 0.05) * 200);
+        const computedOpacity = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--card-opacity')) || 0.4;
+        cardOpacitySlider.value = Math.round(computedOpacity * 100);
+        const secSettings = window.securitySettings || { inactivityMinutes: 1 };
+        inactivitySlider.value = secSettings.inactivityMinutes || 1;
+      }
+      initSettingsControls();
+      // Listeners para actualizar configuración en vivo
+      nodeSlider.addEventListener('input', (e) => {
+        const val = parseInt(e.target.value);
+        window.backgroundSettings.nodeCount = val;
+        if (window.backgroundRegenerate) window.backgroundRegenerate();
+      });
+      rotationSlider.addEventListener('input', (e) => {
+        const val = parseInt(e.target.value);
+        window.backgroundSettings.rotationSpeed = val / 2000;
+      });
+      colorSlider.addEventListener('input', (e) => {
+        const val = parseInt(e.target.value);
+        window.backgroundSettings.colorSpeed = val / 5;
+      });
+      pulseSlider.addEventListener('input', (e) => {
+        const val = parseInt(e.target.value);
+        window.backgroundSettings.pulseFrequency = val / 200;
+      });
+      cardOpacitySlider.addEventListener('input', (e) => {
+        const val = parseInt(e.target.value) / 100;
+        document.documentElement.style.setProperty('--card-opacity', val);
+      });
+      inactivitySlider.addEventListener('input', (e) => {
+        const val = parseInt(e.target.value);
+        if (!window.securitySettings) window.securitySettings = {};
+        window.securitySettings.inactivityMinutes = val;
+        if (window.resetInactivityTimer) {
+          window.resetInactivityTimer();
+        }
+      });
+      // Guardar logo de la empresa cuando se haga clic en el botón
+      const saveLogoBtn = document.getElementById('saveCompanyLogo');
+      if (saveLogoBtn) {
+        saveLogoBtn.addEventListener('click', async () => {
+          const fileInput = document.getElementById('companyLogoInput');
+          if (fileInput && fileInput.files.length > 0) {
+            const file = fileInput.files[0];
+            const base64 = await toBase64(file);
+            await updateCompanyLogo(base64);
+            const newLogo = await getCompanyLogo();
+            if (newLogo) {
+              document.getElementById('companyLogo').src = newLogo;
+            }
+            alert('Logo actualizado correctamente');
+          } else {
+            alert('Seleccione un archivo de imagen');
+          }
+        });
+      }
+
+      // Gestión de pestañas en el panel de configuración
+      const tabButtons = settingsPanel.querySelectorAll('.tab');
+      const tabContents = settingsPanel.querySelectorAll('.tab-content');
+      tabButtons.forEach(tab => {
+        tab.addEventListener('click', () => {
+          // activar la pestaña seleccionada y desactivar las demás
+          tabButtons.forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          const target = tab.getAttribute('data-target');
+          tabContents.forEach(sec => {
+            if (sec.id === target) {
+              sec.style.display = 'block';
+            } else {
+              sec.style.display = 'none';
+            }
+          });
+        });
+      });
+
+      // Flechas de desplazamiento de pestañas. Desplazan el contenedor de pestañas
+      const leftArrow = settingsPanel.querySelector('.tab-arrow[data-dir="left"]');
+      const rightArrow = settingsPanel.querySelector('.tab-arrow[data-dir="right"]');
+      const tabsContainerEl = settingsPanel.querySelector('.tabs');
+      if (leftArrow && rightArrow && tabsContainerEl) {
+        const scrollAmount = () => Math.floor(tabsContainerEl.clientWidth * 0.6);
+        leftArrow.addEventListener('click', () => {
+          tabsContainerEl.scrollBy({ left: -scrollAmount(), behavior: 'smooth' });
+        });
+        rightArrow.addEventListener('click', () => {
+          tabsContainerEl.scrollBy({ left: scrollAmount(), behavior: 'smooth' });
+        });
+      }
+
+      // Cerrar panel de configuración al hacer clic fuera de él
+      document.addEventListener('click', (e) => {
+        const panel = document.getElementById('settingsPanel');
+        const btn = document.getElementById('settingsButton');
+        if (!panel || !btn) return;
+        if (panel.style.display === 'block') {
+          // Si el clic no ocurre dentro del panel ni en el botón que lo abre
+          if (!panel.contains(e.target) && e.target !== btn) {
+            panel.style.display = 'none';
+          }
+        }
+      });
+
+      // ---
+      // Gestión de pestañas del panel de administración
+      const adminTabButtons = document.querySelectorAll('.admin-tab');
+      const adminSections = document.querySelectorAll('.admin-section');
+      adminTabButtons.forEach(tab => {
+        tab.addEventListener('click', async () => {
+          // Activar la pestaña seleccionada y desactivar las demás
+          adminTabButtons.forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          const target = tab.getAttribute('data-target');
+          adminSections.forEach(sec => {
+            if (sec.id === target) {
+              sec.style.display = 'block';
+            } else {
+              sec.style.display = 'none';
+            }
+          });
+          // Cargar datos correspondientes a la sección
+          if (target === 'employeesSection') {
+            await refreshList();
+          } else if (target === 'groupsSection') {
+            await loadGroups();
+          } else if (target === 'calendarSection') {
+            await renderAdminCalendar();
+          } else if (target === 'debtsSection') {
+            const groupId = document.getElementById('filterGroup') ? document.getElementById('filterGroup').value : '';
+            const search = document.getElementById('filterName') ? document.getElementById('filterName').value.trim().toLowerCase() : '';
+            await loadDebtTable(groupId, search);
+          }
+        });
+      });
+      // Flechas de desplazamiento para las pestañas de administración
+      const adminLeftArrow = document.querySelector('.admin-tab-arrow[data-dir="left"]');
+      const adminRightArrow = document.querySelector('.admin-tab-arrow[data-dir="right"]');
+      const adminTabsContainer = document.querySelector('.admin-tabs');
+      if (adminLeftArrow && adminRightArrow && adminTabsContainer) {
+        const scrollAmt = () => Math.floor(adminTabsContainer.clientWidth * 0.6);
+        adminLeftArrow.addEventListener('click', () => {
+          adminTabsContainer.scrollBy({ left: -scrollAmt(), behavior: 'smooth' });
+        });
+        adminRightArrow.addEventListener('click', () => {
+          adminTabsContainer.scrollBy({ left: scrollAmt(), behavior: 'smooth' });
+        });
+      }
+
+      // Cerrar menús desplegables en la tabla de empleados al hacer clic fuera de ellos
+      document.addEventListener('click', (ev) => {
+        const dropdowns = document.querySelectorAll('#employeesTable .dropdown');
+        dropdowns.forEach(dd => {
+          if (!dd.contains(ev.target)) dd.classList.remove('open');
+        });
+      });
+    });
+
+    // === NUEVO: función para eliminar empleado ===
+    async function deleteEmployee(user) {
+      // Evitar borrar administradores desde aquí (ajustable)
+      if (user.role === 'admin') {
+        alert('No se puede eliminar un administrador desde aquí.');
+        return;
+      }
+      const typed = prompt(
+        `Vas a eliminar la cuenta de ${user.firstName} ${user.lastName}.\n` +
+        `Para confirmar, escribe el email del empleado:`
+      );
+      if (typed === null) return; // cancelado
+      if ((typed || '').trim().toLowerCase() !== (user.email || '').toLowerCase()) {
+        alert('El correo no coincide. Operación cancelada.');
+        return;
+      }
+      try {
+        const resp = await fetch(`${API_BASE}/api/users/${user.id}`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: user.email })
+        });
+        if (!resp.ok) {
+          const msg = await resp.json().catch(() => ({}));
+          throw new Error(msg.message || 'No se pudo eliminar el usuario');
+        }
+        alert('Empleado eliminado correctamente.');
+        // Refrescar listas y vistas relacionadas
+        const groupId = document.getElementById('filterGroup')?.value || '';
+        const search = document.getElementById('filterName')?.value?.trim().toLowerCase() || '';
+        await loadEmployees(groupId, search);
+        await loadGroups();
+        await renderAdminCalendar();
+        await loadDebtTable(groupId, search);
+      } catch (e) {
+        console.error(e);
+        alert('Ocurrió un error al eliminar el empleado.');
+      }
+    }
+
+    async function loadEmployees(filterGroupId = '', searchQuery = '') {
+      const tbody = document.querySelector('#employeesTable tbody');
+      tbody.innerHTML = '';
+      const users = await getUsers();
+      const groups = await getGroups();
+      const normalizedSearch = (searchQuery || '').toLowerCase();
+      users.forEach(u => {
+        // Solo mostrar usuarios con rol admin o employee
+        if (u.role !== 'admin' && u.role !== 'employee') return;
+        // Filtrado por grupo: omitir si no pertenece
+        if (filterGroupId && !groups.find(g => g.id === filterGroupId && (g.members || []).includes(u.id))) {
+          return;
+        }
+        // Filtrado por nombre/correo
+        if (normalizedSearch) {
+          const searchTarget = `${u.firstName} ${u.middleName || ''} ${u.lastName} ${u.email}`.toLowerCase();
+          if (!searchTarget.includes(normalizedSearch)) {
+            return;
+          }
+        }
+        const tr = document.createElement('tr');
+        // Nombre completo
+        const nameTd = document.createElement('td');
+        nameTd.textContent = `${u.firstName} ${u.middleName ? u.middleName + ' ' : ''}${u.lastName}`;
+        tr.appendChild(nameTd);
+        // Email
+        const emailTd = document.createElement('td');
+        emailTd.textContent = u.email;
+        tr.appendChild(emailTd);
+        // Grupos del usuario
+        const groupsTd = document.createElement('td');
+        const userGroups = groups.filter(g => (g.members || []).includes(u.id));
+        userGroups.forEach(g => {
+          const span = document.createElement('span');
+          span.className = 'badge';
+          span.textContent = g.name;
+          groupsTd.appendChild(span);
+        });
+        tr.appendChild(groupsTd);
+        // Tipo de pago
+        const payTypeTd = document.createElement('td');
+        payTypeTd.textContent = u.payType || '—';
+        tr.appendChild(payTypeTd);
+        // Tarifa
+        const payRateTd = document.createElement('td');
+        payRateTd.textContent = (u.payRate !== undefined && u.payRate !== null) ? u.payRate.toFixed(2) : '—';
+        tr.appendChild(payRateTd);
+        // Acciones consolidadas en un menú desplegable
+        const actionsTd = document.createElement('td');
+        const dropdown = document.createElement('div');
+        dropdown.className = 'dropdown';
+        // Botón que abre el menú
+        const dropBtn = document.createElement('button');
+        dropBtn.className = 'dropdown-button';
+        dropBtn.innerHTML = '&#8942;'; // símbolo de tres puntos verticales
+        dropdown.appendChild(dropBtn);
+        // Menú con opciones
+        const menu = document.createElement('div');
+        menu.className = 'dropdown-menu';
+        // Opción: Editar pago
+        const editOpt = document.createElement('button');
+        editOpt.textContent = 'Editar pago';
+        editOpt.onclick = () => openPayModal(u);
+        menu.appendChild(editOpt);
+        // Opción: Horas CSV
+        const hoursCsvOpt = document.createElement('button');
+        hoursCsvOpt.textContent = 'Horas CSV';
+        hoursCsvOpt.onclick = () => exportTimesCSV(u.id);
+        menu.appendChild(hoursCsvOpt);
+        // Opción: Horas PDF
+        const hoursPdfOpt = document.createElement('button');
+        hoursPdfOpt.textContent = 'Horas PDF';
+        hoursPdfOpt.onclick = () => exportTimesPDF(u.id);
+        menu.appendChild(hoursPdfOpt);
+        // Opción: Recibos CSV
+        const recCsvOpt = document.createElement('button');
+        recCsvOpt.textContent = 'Recibos CSV';
+        recCsvOpt.onclick = () => exportReceiptsCSV(u.id);
+        menu.appendChild(recCsvOpt);
+        // Opción: Recibos PDF
+        const recPdfOpt = document.createElement('button');
+        recPdfOpt.textContent = 'Recibos PDF';
+        recPdfOpt.onclick = () => exportReceiptsPDF(u.id);
+        menu.appendChild(recPdfOpt);
+        // === NUEVO: Opción eliminar ===
+        const delOpt = document.createElement('button');
+        delOpt.textContent = 'Eliminar';
+        delOpt.className = 'danger';
+        delOpt.onclick = () => deleteEmployee(u);
+        menu.appendChild(delOpt);
+
+        dropdown.appendChild(menu);
+        // Gestionar apertura del menú al hacer clic
+        dropBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          // Cerrar otros menús abiertos
+          document.querySelectorAll('#employeesTable .dropdown').forEach(dd => {
+            if (dd !== dropdown) dd.classList.remove('open');
+          });
+          dropdown.classList.toggle('open');
+        });
+        actionsTd.appendChild(dropdown);
+        tr.appendChild(actionsTd);
+        tbody.appendChild(tr);
+      });
+    }
+    async function loadGroups() {
+      const listEl = document.getElementById('groupsList');
+      listEl.innerHTML = '';
+      const groups = await getGroups();
+      if (groups.length === 0) {
+        listEl.textContent = 'No hay grupos creados.';
+        return;
+      }
+      groups.forEach(g => {
+        const div = document.createElement('div');
+        div.style.marginBottom = '0.5rem';
+        // Nombre del grupo
+        const badge = document.createElement('span');
+        badge.className = 'badge';
+        badge.textContent = g.name;
+        div.appendChild(badge);
+        // Enlace a detalles
+        const link = document.createElement('a');
+        link.href = `group.html?groupId=${g.id}`;
+        link.className = 'action-link';
+        link.textContent = 'ver detalles';
+        link.style.marginLeft = '0.5rem';
+        div.appendChild(link);
+        // Botones de exportación rápida
+        // Horas CSV
+        const btnTimesCsv = document.createElement('button');
+        btnTimesCsv.className = 'btn-secondary';
+        btnTimesCsv.textContent = 'Horas CSV';
+        btnTimesCsv.style.marginLeft = '0.5rem';
+        btnTimesCsv.onclick = () => exportGroupTimesCSV(g.id);
+        div.appendChild(btnTimesCsv);
+        // Horas PDF
+        const btnTimesPdf = document.createElement('button');
+        btnTimesPdf.className = 'btn-secondary';
+        btnTimesPdf.textContent = 'Horas PDF';
+        btnTimesPdf.style.marginLeft = '0.25rem';
+        btnTimesPdf.onclick = () => exportGroupTimesPDF(g.id);
+        div.appendChild(btnTimesPdf);
+        // Recibos CSV
+        const btnRecCsv = document.createElement('button');
+        btnRecCsv.className = 'btn-secondary';
+        btnRecCsv.textContent = 'Recibos CSV';
+        btnRecCsv.style.marginLeft = '0.5rem';
+        btnRecCsv.onclick = () => exportGroupReceiptsCSV(g.id);
+        div.appendChild(btnRecCsv);
+        // Recibos PDF
+        const btnRecPdf = document.createElement('button');
+        btnRecPdf.className = 'btn-secondary';
+        btnRecPdf.textContent = 'Recibos PDF';
+        btnRecPdf.style.marginLeft = '0.25rem';
+        btnRecPdf.onclick = () => exportGroupReceiptsPDF(g.id);
+        div.appendChild(btnRecPdf);
+        listEl.appendChild(div);
+      });
+    }
+
+    // Renderiza el calendario del administrador para el mes actual
+    async function renderAdminCalendar() {
+      const calEl = document.getElementById('adminCalendar');
+      if (!calEl) return;
+      // Obtener usuarios y sus horarios
+      const users = await getUsers();
+      const dayMap = {};
+      // Mapa para fechas programadas
+      const scheduleMap = {};
+      await Promise.all(users.map(async u => {
+        if (u.role !== 'admin' && u.role !== 'employee') return;
+        // Recuperar registros de tiempo
+        const res = await fetch(API_BASE + '/api/users/' + u.id + '/times');
+        const times = await res.json();
+        times.forEach(rec => {
+          const inDateStr = new Date(rec.clockIn).toISOString().substring(0, 10);
+          if (!dayMap[inDateStr]) dayMap[inDateStr] = [];
+          dayMap[inDateStr].push({ user: u, record: rec });
+          if (rec.clockOut) {
+            const outDateStr = new Date(rec.clockOut).toISOString().substring(0, 10);
+            if (!dayMap[outDateStr]) dayMap[outDateStr] = [];
+            dayMap[outDateStr].push({ user: u, record: rec });
+          }
+        });
+        // Mapear fechas programadas (schedules)
+        if (Array.isArray(u.schedules)) {
+          u.schedules.forEach(dateStr => {
+            if (!scheduleMap[dateStr]) scheduleMap[dateStr] = [];
+            scheduleMap[dateStr].push(u);
+          });
+        }
+      }));
+      // Guardar en variables globales
+      window.adminDayMap = dayMap;
+      window.adminScheduleMap = scheduleMap;
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth();
+      const weekDays = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+      let html = '';
+      weekDays.forEach(w => { html += `<div class="week-day">${w}</div>`; });
+      const firstDay = new Date(year, month, 1).getDay();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      for (let i = 0; i < firstDay; i++) {
+        html += '<div class="day empty"></div>';
+      }
+      // Preparar conteos de empleados trabajando y programados por fecha
+      const workingCounts = {};
+      Object.keys(dayMap).forEach(dateKey => {
+        const uniq = new Set();
+        (dayMap[dateKey] || []).forEach(item => {
+          uniq.add(item.user.id);
+        });
+        workingCounts[dateKey] = uniq.size;
+      });
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        const hasWork = dayMap[dateStr] && dayMap[dateStr].length > 0;
+        const hasSchedule = scheduleMap[dateStr] && scheduleMap[dateStr].length > 0;
+        const classes = [];
+        if (hasWork) classes.push('worked');
+        if (hasSchedule) classes.push('scheduled');
+        const workCount = workingCounts[dateStr] || 0;
+        const schedCount = (scheduleMap[dateStr] || []).length;
+        let countsHtml = '';
+        if (workCount > 0) {
+          countsHtml += `<span class="count working-count">${workCount}</span>`;
+        }
+        if (schedCount > 0) {
+          countsHtml += `<span class="count schedule-count">${schedCount}</span>`;
+        }
+        html += `<div class="day ${classes.join(' ')}" data-date="${dateStr}"><span class="date-num">${d}</span>${countsHtml}</div>`;
+      }
+      calEl.innerHTML = html;
+      calEl.querySelectorAll('.day').forEach(cell => {
+        if (!cell.classList.contains('empty')) {
+          cell.addEventListener('click', () => {
+            openAdminDayModal(cell.getAttribute('data-date'));
+          });
+        }
+      });
+    }
+
+    // Abre modal del administrador para un día específico
+    async function openAdminDayModal(dateStr) {
+      const modal = document.getElementById('adminDayModal');
+      if (!modal) return;
+      const listEl = document.getElementById('adminDayList');
+      listEl.innerHTML = '';
+      // Obtener registros de tiempos para este día
+      const items = (window.adminDayMap && window.adminDayMap[dateStr]) || [];
+      // Introducción para la tabla de horarios
+      let tableHtml = '<p style="margin-bottom:0.5rem;">Use los botones "Clock In" para iniciar la jornada o "Clock Out" para finalizarla.</p>';
+      tableHtml += '<table><thead><tr><th>Empleado</th><th>Entradas</th><th>Salidas</th><th>Horas</th><th>Acción</th></tr></thead><tbody>';
+      if (items.length > 0) {
+        // Agrupar por usuario
+        const grouped = {};
+        items.forEach(item => {
+          const uid = item.user.id;
+          if (!grouped[uid]) grouped[uid] = { user: item.user, records: [] };
+          grouped[uid].records.push(item.record);
+        });
+        // Guardar la fecha actual para poder recargar el modal tras togglear clock
+        window.currentAdminModalDate = dateStr;
+        for (const uid in grouped) {
+          const gr = grouped[uid];
+          let ins = '';
+          let outs = '';
+          let total = 0;
+          gr.records.forEach(r => {
+            const inDateStr = new Date(r.clockIn).toISOString().substring(0, 10);
+            const outDateStr = r.clockOut ? new Date(r.clockOut).toISOString().substring(0, 10) : null;
+            if (inDateStr === dateStr) {
+              ins += formatDateTime(r.clockIn) + '<br>';
+            }
+            if (outDateStr === dateStr) {
+              outs += formatDateTime(r.clockOut) + '<br>';
+            }
+            if (r.clockOut && (inDateStr === dateStr || outDateStr === dateStr)) {
+              total += calcHours(r.clockIn, r.clockOut);
+            }
+          });
+          // Determinar si el usuario está actualmente en jornada (último registro sin clockOut)
+          const userTimes = gr.user.times || [];
+          let isClockedIn = false;
+          if (userTimes.length > 0) {
+            const lastTime = userTimes[userTimes.length - 1];
+            isClockedIn = !lastTime.clockOut;
+          }
+          const btnLabel = isClockedIn ? 'Clock Out' : 'Clock In';
+          tableHtml += `<tr><td>${gr.user.firstName} ${gr.user.lastName}</td><td>${ins || '—'}</td><td>${outs || '—'}</td><td>${total.toFixed(2)}</td><td><button class="btn-secondary" onclick="adminToggleClock('${gr.user.id}')">${btnLabel}</button></td></tr>`;
+        }
+      }
+      tableHtml += '</tbody></table>';
+      // Determinar usuarios programados y sin registros de entrada
+      let schedHtml = '';
+      const schedUsers = (window.adminScheduleMap && window.adminScheduleMap[dateStr]) || [];
+      if (schedUsers.length > 0) {
+        // Crear conjunto de IDs de usuarios que ya tienen registros
+        const workedIds = new Set();
+        (items || []).forEach(item => {
+          workedIds.add(item.user.id);
+        });
+        const notWorking = schedUsers.filter(u => !workedIds.has(u.id));
+        if (notWorking.length > 0) {
+          schedHtml += '<p><strong>Programados (sin registrar entrada):</strong></p><ul style="padding-left:1rem; margin-top:0;">';
+          notWorking.forEach(u => {
+            schedHtml += `<li>${u.firstName} ${u.lastName}</li>`;
+          });
+          schedHtml += '</ul>';
+        }
+      }
+      // Obtener todos los usuarios para seleccionar en acciones
+      const allUsers = await getUsers();
+      const employeeOptions = allUsers
+        .filter(u => u.role === 'employee' || u.role === 'admin')
+        .map(u => `<option value="${u.id}">${u.firstName} ${u.lastName}</option>`)
+        .join('');
+      // Sección de acciones
+      let actionsHtml = '';
+      actionsHtml += '<hr>';
+      actionsHtml += `<h4>Acciones para ${new Date(dateStr).toLocaleDateString('es-ES', { year:'numeric', month:'long', day:'numeric' })}</h4>`;
+      actionsHtml += '<div class="form-group" style="margin-bottom:0.5rem;">';
+      actionsHtml += '<label>Seleccionar empleado:</label>';
+      actionsHtml += `<select id="scheduleEmployeeSelect"><option value="" disabled selected>Seleccione...</option>${employeeOptions}</select>`;
+      actionsHtml += '</div>';
+      actionsHtml += '<div class="flex" style="gap:0.5rem; margin-bottom:0.5rem;">';
+      actionsHtml += `<button id="scheduleBtn" class="btn-secondary">Programar</button>`;
+      actionsHtml += `<button id="clockBtn" class="btn-secondary">Clock In/Out</button>`;
+      actionsHtml += '</div>';
+      // Componer contenido final
+      listEl.innerHTML = tableHtml + schedHtml + actionsHtml;
+      // Asignar eventos a botones después de insertar en DOM
+      const scheduleBtn = document.getElementById('scheduleBtn');
+      const clockBtn = document.getElementById('clockBtn');
+      const selectEl = document.getElementById('scheduleEmployeeSelect');
+      if (scheduleBtn) {
+        scheduleBtn.addEventListener('click', async () => {
+          const uid = selectEl.value;
+          if (!uid) {
+            alert('Seleccione un empleado');
+            return;
+          }
+          await addSchedule(uid, dateStr);
+          await renderAdminCalendar();
+          // Recargar modal para reflejar cambios
+          await openAdminDayModal(dateStr);
+          alert('Día programado correctamente');
+        });
+      }
+      if (clockBtn) {
+        clockBtn.addEventListener('click', async () => {
+          const uid = selectEl.value;
+          if (!uid) {
+            alert('Seleccione un empleado');
+            return;
+          }
+          // Alternar clock y programar automáticamente
+          await toggleClockForUser(uid);
+          await addSchedule(uid, dateStr);
+          await renderAdminCalendar();
+          await openAdminDayModal(dateStr);
+        });
+      }
+      // Mostrar modal
+      document.getElementById('adminDayModalTitle').textContent = new Date(dateStr).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      modal.style.display = 'flex';
+    }
+
+    function closeAdminDayModal() {
+      const modal = document.getElementById('adminDayModal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    async function adminToggleClock(userId) {
+      await toggleClockForUser(userId);
+      // Recargar empleados con filtro actual y calendario
+      const currentFilter = document.getElementById('filterGroup') ? document.getElementById('filterGroup').value : '';
+      // Mantener búsqueda actual si existe
+      const searchInput = document.getElementById('filterName');
+      const searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
+      await loadEmployees(currentFilter, searchTerm);
+      await renderAdminCalendar();
+      // Si hay un modal de día abierto, recargarlo para reflejar el cambio
+      if (window.currentAdminModalDate) {
+        await openAdminDayModal(window.currentAdminModalDate);
+      }
+      // Actualizar deudas después de modificar el clock in/out
+      await loadDebtTable(currentFilter, searchTerm);
+    }
+
+    // Poblar lista desplegable de grupos para filtrar empleados
+    async function populateGroupFilter() {
+      const select = document.getElementById('filterGroup');
+      if (!select) return;
+      // Vaciar opciones excepto primera
+      select.innerHTML = '<option value="">Todos</option>';
+      const groups = await getGroups();
+      groups.forEach(g => {
+        const opt = document.createElement('option');
+        opt.value = g.id;
+        opt.textContent = g.name;
+        select.appendChild(opt);
+      });
+    }
+
+    // Carga los recibos de todos los empleados pertenecientes a un grupo y los muestra en una tabla.
+    async function loadGroupReceipts(groupId) {
+      const card = document.getElementById('groupReceiptsCard');
+      const container = document.getElementById('groupReceiptsContainer');
+      if (!card || !container) return;
+      container.innerHTML = '';
+      // Obtener grupo y usuarios
+      const groups = await getGroups();
+      const group = groups.find(g => g.id === groupId);
+      if (!group) {
+        card.style.display = 'none';
+        return;
+      }
+      // Obtener listado de usuarios de una vez para evitar solicitudes repetidas
+      const users = await getUsers();
+      const logoSrc = (document.getElementById('companyLogo') && document.getElementById('companyLogo').src) || '';
+      let hasReceipts = false;
+      let html = '<table><thead><tr><th>Logo</th><th>Empleado</th><th>Fecha</th><th>Categoría</th><th>Descripción</th><th>Monto</th><th>Recibo</th></tr></thead><tbody>';
+      for (const uid of group.members || []) {
+        const user = users.find(u => u.id === uid);
+        if (!user) continue;
+        // Obtener recibos del usuario
+        try {
+          const res = await fetch(API_BASE + '/api/users/' + uid + '/receipts');
+          const receipts = await res.json();
+          receipts.forEach(r => {
+            hasReceipts = true;
+            html += '<tr>';
+            html += `<td><img src="${logoSrc}" alt="logo" style="width:24px;height:24px;object-fit:contain;"></td>`;
+            html += `<td>${user.firstName} ${user.lastName}</td>`;
+            html += `<td>${formatDateTime(r.date)}</td>`;
+            html += `<td>${r.category}</td>`;
+            html += `<td>${r.note ? r.note.replace(/\n/g, ' ') : ''}</td>`;
+            html += `<td>${(r.amount !== undefined && r.amount !== null) ? parseFloat(r.amount).toFixed(2) : ''}</td>`;
+            html += `<td><img src="${r.imageData}" alt="Recibo" style="width:60px;height:60px;object-fit:contain;border-radius:4px;"></td>`;
+            html += '</tr>';
+          });
+        } catch (e) {
+          console.error('Error al cargar recibos', e);
+        }
+      }
+      html += '</tbody></table>';
+      container.innerHTML = hasReceipts ? html : '<p>No hay recibos para este grupo.</p>';
+      card.style.display = 'block';
+    }
+
+    // Gestión de modal de edición de pago
+    let selectedPayUser = null;
+    function openPayModal(user) {
+      selectedPayUser = user;
+      document.getElementById('payUserName').textContent = `${user.firstName} ${user.lastName}`;
+      document.getElementById('editPayType').value = user.payType || 'hora';
+      document.getElementById('editPayRate').value = (user.payRate !== undefined && user.payRate !== null) ? user.payRate : '';
+      const modal = document.getElementById('payModal');
+      if (modal) modal.style.display = 'flex';
+    }
+    function closePayModal() {
+      const modal = document.getElementById('payModal');
+      if (modal) modal.style.display = 'none';
+    }
+    async function savePay() {
+      if (!selectedPayUser) return;
+      const payType = document.getElementById('editPayType').value;
+      const payRate = parseFloat(document.getElementById('editPayRate').value);
+      await updateUserPay(selectedPayUser.id, payType, payRate);
+      const currentFilter = document.getElementById('filterGroup') ? document.getElementById('filterGroup').value : '';
+      await loadEmployees(currentFilter);
+      // Después de actualizar el pago, recargar tabla de deudas para reflejar el nuevo cálculo
+      await loadDebtTable(currentFilter, (document.getElementById('filterName') || {}).value);
+      // Después de actualizar el pago, recargar tabla de deudas para reflejar el nuevo cálculo
+      await loadDebtTable(currentFilter, (document.getElementById('filterName') || {}).value);
+      closePayModal();
+    }
+
+    // Funciones para deudas y visores
+    async function loadDebtTable(filterGroupId = '', searchQuery = '') {
+      const tbody = document.querySelector('#debtTable tbody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+      const users = await getUsers();
+      const groups = await getGroups();
+      const normalizedSearch = (searchQuery || '').trim().toLowerCase();
+      // Construir mapa de pertenencia a grupos
+      const groupMembership = {};
+      groups.forEach(g => {
+        (g.members || []).forEach(uid => {
+          groupMembership[uid] = g.id;
+        });
+      });
+      for (const u of users) {
+        if (u.role !== 'employee' && u.role !== 'admin') continue;
+        // Filtrar por grupo
+        if (filterGroupId) {
+          if (groupMembership[u.id] !== filterGroupId) continue;
+        }
+        // Filtrar por búsqueda
+        if (normalizedSearch) {
+          const searchTarget = `${u.firstName} ${u.middleName || ''} ${u.lastName} ${u.email}`.toLowerCase();
+          if (!searchTarget.includes(normalizedSearch)) continue;
+        }
+        // Calcular horas y salarios
+        let totalHours = 0;
+        let wagesDue = 0;
+        let uniqueDays = new Set();
+        try {
+          const res = await fetch(API_BASE + '/api/users/' + u.id + '/times');
+          const times = await res.json();
+          times.forEach(rec => {
+            if (rec.clockOut) {
+              const hrs = calcHours(rec.clockIn, rec.clockOut);
+              totalHours += hrs;
+              if (u.payType === 'dia') {
+                const startDateStr = new Date(rec.clockIn).toISOString().substring(0, 10);
+                const endDateStr = new Date(rec.clockOut).toISOString().substring(0, 10);
+                uniqueDays.add(startDateStr);
+                uniqueDays.add(endDateStr);
+              } else {
+                wagesDue += hrs * (u.payRate || 0);
+              }
+            }
+          });
+          if (u.payType === 'dia') {
+            wagesDue = uniqueDays.size * (u.payRate || 0);
+          } else if (u.payType === 'salario') {
+            wagesDue = totalHours * (u.payRate || 0);
+          }
+        } catch (e) {
+          console.error('Error obteniendo tiempos para deudas', e);
+        }
+        // Calcular recibos
+        let receiptsCount = 0;
+        let receiptsDue = 0;
+        try {
+          const res = await fetch(API_BASE + '/api/users/' + u.id + '/receipts');
+          const receipts = await res.json();
+          receiptsCount = receipts.length;
+          receipts.forEach(r => {
+            if (r.amount !== undefined && r.amount !== null) {
+              receiptsDue += parseFloat(r.amount);
+            }
+          });
+        } catch (e) {
+          console.error('Error obteniendo recibos para deudas', e);
+        }
+        const totalDue = wagesDue + receiptsDue;
+        // Crear fila
+        const tr = document.createElement('tr');
+        const nameTd = document.createElement('td');
+        nameTd.textContent = `${u.firstName} ${u.lastName}`;
+        tr.appendChild(nameTd);
+        const hoursTd = document.createElement('td');
+        hoursTd.textContent = totalHours.toFixed(2);
+        tr.appendChild(hoursTd);
+        const wagesTd = document.createElement('td');
+        wagesTd.textContent = wagesDue.toFixed(2);
+        tr.appendChild(wagesTd);
+        const recCountTd = document.createElement('td');
+        recCountTd.textContent = receiptsCount;
+        tr.appendChild(recCountTd);
+        const recAmountTd = document.createElement('td');
+        recAmountTd.textContent = receiptsDue.toFixed(2);
+        tr.appendChild(recAmountTd);
+        const totalTd = document.createElement('td');
+        totalTd.textContent = totalDue.toFixed(2);
+        tr.appendChild(totalTd);
+        const actionTd = document.createElement('td');
+        const viewHoursBtn = document.createElement('button');
+        viewHoursBtn.className = 'btn-secondary';
+        viewHoursBtn.textContent = 'Horas';
+        viewHoursBtn.onclick = () => openHoursViewer(u.id);
+        actionTd.appendChild(viewHoursBtn);
+        const viewRecBtn = document.createElement('button');
+        viewRecBtn.className = 'btn-secondary';
+        viewRecBtn.style.marginLeft = '0.25rem';
+        viewRecBtn.textContent = 'Recibos';
+        viewRecBtn.onclick = () => openReceiptsViewer(u.id);
+        actionTd.appendChild(viewRecBtn);
+        tr.appendChild(actionTd);
+        tbody.appendChild(tr);
+      }
+    }
+
+    // Mostrar modal con horas de un empleado
+    async function openHoursViewer(userId) {
+      const modal = document.getElementById('hoursModal');
+      if (!modal) return;
+      // Nombre del empleado
+      try {
+        const user = await fetchUser(userId);
+        const nameSpan = document.getElementById('hoursUserName');
+        if (user && nameSpan) {
+          nameSpan.textContent = `${user.firstName} ${user.lastName}`;
+        }
+      } catch (e) {
+        console.error('Error obteniendo usuario', e);
+      }
+      const container = document.getElementById('hoursTableContainer');
+      container.innerHTML = '';
+      try {
+        const res = await fetch(API_BASE + '/api/users/' + userId + '/times');
+        const times = await res.json();
+        const table = document.createElement('table');
+        const thead = document.createElement('thead');
+        thead.innerHTML = '<tr><th>Entrada</th><th>Salida</th><th>Horas</th></tr>';
+        table.appendChild(thead);
+        const tbodyEl = document.createElement('tbody');
+        times.forEach(r => {
+          const tr = document.createElement('tr');
+          const tdIn = document.createElement('td');
+          tdIn.textContent = formatDateTime(r.clockIn);
+          tr.appendChild(tdIn);
+          const tdOut = document.createElement('td');
+          tdOut.textContent = r.clockOut ? formatDateTime(r.clockOut) : '—';
+          tr.appendChild(tdOut);
+          const tdHrs = document.createElement('td');
+          tdHrs.textContent = r.clockOut ? calcHours(r.clockIn, r.clockOut).toFixed(2) : '—';
+          tr.appendChild(tdHrs);
+          tbodyEl.appendChild(tr);
+        });
+        table.appendChild(tbodyEl);
+        container.appendChild(table);
+      } catch (e) {
+        console.error('Error al cargar horas del usuario', e);
+        container.innerHTML = '<p>Error al cargar horas</p>';
+      }
+      modal.style.display = 'flex';
+    }
+
+    function closeHoursModal() {
+      const modal = document.getElementById('hoursModal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    // Mostrar modal con recibos de un empleado
+    async function openReceiptsViewer(userId) {
+      const modal = document.getElementById('receiptsModal');
+      if (!modal) return;
+      try {
+        const user = await fetchUser(userId);
+        const nameSpan = document.getElementById('receiptsUserName');
+        if (user && nameSpan) {
+          nameSpan.textContent = `${user.firstName} ${user.lastName}`;
+        }
+      } catch (e) {
+        console.error('Error obteniendo usuario', e);
+      }
+      const container = document.getElementById('receiptsTableContainer');
+      container.innerHTML = '';
+      try {
+        const res = await fetch(API_BASE + '/api/users/' + userId + '/receipts');
+        const receipts = await res.json();
+        const table = document.createElement('table');
+        const thead = document.createElement('thead');
+        thead.innerHTML = '<tr><th>Fecha</th><th>Categoría</th><th>Descripción</th><th>Monto</th><th>Ver</th></tr>';
+        table.appendChild(thead);
+        const tbodyEl = document.createElement('tbody');
+        receipts.forEach(r => {
+          const tr = document.createElement('tr');
+          const tdDate = document.createElement('td');
+          tdDate.textContent = formatDateTime(r.date);
+          tr.appendChild(tdDate);
+          const tdCat = document.createElement('td');
+          tdCat.textContent = r.category || '';
+          tr.appendChild(tdCat);
+          const tdDesc = document.createElement('td');
+          tdDesc.textContent = (r.note || '').replace(/\n/g, ' ');
+          tr.appendChild(tdDesc);
+          const tdAmt = document.createElement('td');
+          tdAmt.textContent = (r.amount !== undefined && r.amount !== null) ? parseFloat(r.amount).toFixed(2) : '';
+          tr.appendChild(tdAmt);
+          const tdView = document.createElement('td');
+          const link = document.createElement('a');
+          link.href = '#';
+          link.className = 'action-link';
+          link.textContent = 'Ver';
+          link.addEventListener('click', (ev) => {
+            ev.preventDefault();
+            showModal(r.imageData, r.note);
+          });
+          tdView.appendChild(link);
+          tr.appendChild(tdView);
+          tbodyEl.appendChild(tr);
+        });
+        table.appendChild(tbodyEl);
+        container.appendChild(table);
+      } catch (e) {
+        console.error('Error al cargar recibos del usuario', e);
+        container.innerHTML = '<p>Error al cargar recibos</p>';
+      }
+      modal.style.display = 'flex';
+    }
+
+    function closeReceiptsModal() {
+      const modal = document.getElementById('receiptsModal');
+      if (modal) modal.style.display = 'none';
+    }
+    // Asignar manejadores de modal
+    document.addEventListener('DOMContentLoaded', () => {
+      const closeBtn = document.getElementById('closePayModal');
+      if (closeBtn) closeBtn.addEventListener('click', closePayModal);
+      const cancelBtn = document.getElementById('cancelPayButton');
+      if (cancelBtn) cancelBtn.addEventListener('click', closePayModal);
+      const saveBtn = document.getElementById('savePayButton');
+      if (saveBtn) saveBtn.addEventListener('click', savePay);
+
+      // Cerrar modales al hacer clic fuera de ellos
+      const adminDayModal = document.getElementById('adminDayModal');
+      if (adminDayModal) {
+        adminDayModal.addEventListener('click', (ev) => {
+          // Si el clic se produce en el propio overlay (y no en el contenido interior)
+          if (ev.target === adminDayModal) {
+            closeAdminDayModal();
+          }
+        });
+      }
+      const payModalEl = document.getElementById('payModal');
+      if (payModalEl) {
+        payModalEl.addEventListener('click', (ev) => {
+          if (ev.target === payModalEl) {
+            closePayModal();
+          }
+        });
+      }
+
+      // Cerrar modales de horas y recibos al hacer clic fuera de ellos
+      const hoursModalEl = document.getElementById('hoursModal');
+      if (hoursModalEl) {
+        hoursModalEl.addEventListener('click', (ev) => {
+          if (ev.target === hoursModalEl) {
+            closeHoursModal();
+          }
+        });
+      }
+      const receiptsModalEl = document.getElementById('receiptsModal');
+      if (receiptsModalEl) {
+        receiptsModalEl.addEventListener('click', (ev) => {
+          if (ev.target === receiptsModalEl) {
+            closeReceiptsModal();
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>

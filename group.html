@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SettleMe – Grupos</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header>
+    <div class="nav">
+      <!-- Logo de la compañía en lugar del texto de marca -->
+      <img id="companyLogo" class="company-logo" src="" alt="Logo">
+      <ul>
+        <li><button id="toggleDark" class="dark-toggle" title="Alternar modo oscuro">🌙</button></li>
+        <li><a href="index.html" class="action-link" onclick="logout()">Cerrar sesión</a></li>
+      </ul>
+    </div>
+  </header>
+  <main class="container">
+    <div id="content"></div>
+  </main>
+  <script src="js/app.js"></script>
+  <!-- Fondo neuronal animado sin dependencias externas -->
+  <script src="js/background.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      initTheme();
+      // Cargar logo de la compañía si existe
+      try {
+        const logo = await getCompanyLogo();
+        if (logo) {
+          const logoEl = document.getElementById('companyLogo');
+          if (logoEl) logoEl.src = logo;
+        }
+      } catch (e) {
+        console.error('Error al cargar logo', e);
+      }
+      const current = await getCurrentUser();
+      if (!current || current.role !== 'admin') {
+        window.location.href = 'index.html';
+        return;
+      }
+      const params = new URLSearchParams(window.location.search);
+      const groupId = params.get('groupId');
+      if (groupId) {
+        await renderGroupDetail(groupId);
+      } else {
+        await renderGroupList();
+      }
+      document.getElementById('toggleDark').addEventListener('click', toggleTheme);
+
+      // Configurar temporizador de inactividad para cerrar sesión automáticamente
+      if (window.setupInactivityTimer) {
+        window.setupInactivityTimer();
+      }
+    });
+    async function renderGroupList() {
+      const container = document.getElementById('content');
+      container.innerHTML = '';
+      const card = document.createElement('div');
+      card.className = 'card';
+      const h2 = document.createElement('h2');
+      h2.textContent = 'Grupos';
+      card.appendChild(h2);
+      // Lista
+      const groups = await getGroups();
+      const listEl = document.createElement('div');
+      if (groups.length === 0) {
+        listEl.textContent = 'No hay grupos creados.';
+      } else {
+        groups.forEach(g => {
+          const div = document.createElement('div');
+          div.style.marginBottom = '0.5rem';
+          const badge = document.createElement('span');
+          badge.className = 'badge';
+          badge.textContent = g.name;
+          div.appendChild(badge);
+          const link = document.createElement('a');
+          link.href = `group.html?groupId=${g.id}`;
+          link.className = 'action-link';
+          link.textContent = 'ver detalles';
+          link.style.marginLeft = '0.5rem';
+          div.appendChild(link);
+          listEl.appendChild(div);
+        });
+      }
+      card.appendChild(listEl);
+      // Formulario creación
+      const formTitle = document.createElement('h3');
+      formTitle.textContent = 'Crear nuevo grupo';
+      card.appendChild(formTitle);
+      const form = document.createElement('form');
+      form.id = 'createGroupForm';
+      form.innerHTML = `
+        <div class="form-group">
+          <label for="groupName">Nombre del grupo</label>
+          <input type="text" id="groupName" required>
+        </div>
+        <button type="submit">Crear grupo</button>
+      `;
+      card.appendChild(form);
+      container.appendChild(card);
+      form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const name = document.getElementById('groupName').value.trim();
+        if (!name) return;
+        const result = await createGroup(name);
+        if (result.success) {
+          alert('Grupo creado');
+          await renderGroupList();
+        } else {
+          alert(result.message || 'Error al crear grupo');
+        }
+      });
+    }
+    async function renderGroupDetail(id) {
+      const group = await getGroupById(id);
+      if (!group) {
+        window.location.href = 'group.html';
+        return;
+      }
+      const container = document.getElementById('content');
+      container.innerHTML = '';
+      const card = document.createElement('div');
+      card.className = 'card';
+      const h2 = document.createElement('h2');
+      h2.innerHTML = `Grupo <span class="badge">${group.name}</span>`;
+      card.appendChild(h2);
+      // Acciones de exportar
+      const actions = document.createElement('div');
+      actions.className = 'flex align-center';
+      // Exportar horas CSV
+      const btnHoursCsv = document.createElement('button');
+      btnHoursCsv.className = 'btn-secondary';
+      btnHoursCsv.textContent = 'Horas CSV';
+      btnHoursCsv.onclick = () => exportGroupTimesCSV(group.id);
+      actions.appendChild(btnHoursCsv);
+      // Exportar horas PDF
+      const btnHoursPdf = document.createElement('button');
+      btnHoursPdf.className = 'btn-secondary';
+      btnHoursPdf.textContent = 'Horas PDF';
+      btnHoursPdf.style.marginLeft = '0.5rem';
+      btnHoursPdf.onclick = () => exportGroupTimesPDF(group.id);
+      actions.appendChild(btnHoursPdf);
+      // Exportar recibos CSV
+      const btnRecCsv = document.createElement('button');
+      btnRecCsv.className = 'btn-secondary';
+      btnRecCsv.textContent = 'Recibos CSV';
+      btnRecCsv.style.marginLeft = '0.5rem';
+      btnRecCsv.onclick = () => exportGroupReceiptsCSV(group.id);
+      actions.appendChild(btnRecCsv);
+      // Exportar recibos PDF
+      const btnRecPdf = document.createElement('button');
+      btnRecPdf.className = 'btn-secondary';
+      btnRecPdf.textContent = 'Recibos PDF';
+      btnRecPdf.style.marginLeft = '0.5rem';
+      btnRecPdf.onclick = () => exportGroupReceiptsPDF(group.id);
+      actions.appendChild(btnRecPdf);
+      card.appendChild(actions);
+      // Lista de miembros
+      const membersTitle = document.createElement('h3');
+      membersTitle.textContent = 'Miembros';
+      card.appendChild(membersTitle);
+      const membersDiv = document.createElement('div');
+      card.appendChild(membersDiv);
+      // Form agregar miembros
+      const addTitle = document.createElement('h3');
+      addTitle.textContent = 'Añadir miembro';
+      card.appendChild(addTitle);
+      const addForm = document.createElement('form');
+      addForm.id = 'addMemberForm';
+      const select = document.createElement('select');
+      select.id = 'memberSelect';
+      addForm.appendChild(select);
+      const addBtn = document.createElement('button');
+      addBtn.type = 'submit';
+      addBtn.textContent = 'Añadir';
+      addBtn.style.marginLeft = '0.5rem';
+      addForm.appendChild(addBtn);
+      card.appendChild(addForm);
+      // Eliminar grupo
+      const delBtn = document.createElement('button');
+      delBtn.className = 'btn-danger';
+      delBtn.textContent = 'Eliminar grupo';
+      delBtn.style.marginTop = '1rem';
+      delBtn.onclick = async () => {
+        if (confirm('¿Estás seguro de eliminar este grupo?')) {
+          await deleteGroup(group.id);
+          window.location.href = 'group.html';
+        }
+      };
+      card.appendChild(delBtn);
+      container.appendChild(card);
+      // Actualizar listas
+      await updateMembersList();
+      await populateSelect();
+      async function updateMembersList() {
+        membersDiv.innerHTML = '';
+        const members = group.members || [];
+        if (members.length === 0) {
+          membersDiv.textContent = 'El grupo no tiene miembros.';
+          return;
+        }
+        // Obtener todos los usuarios para mapear nombres
+        const users = await getUsers();
+        members.forEach(uid => {
+          const user = users.find(u => u.id === uid);
+          if (!user) return;
+          const div = document.createElement('div');
+          div.className = 'flex align-center';
+          const nameSpan = document.createElement('span');
+          nameSpan.textContent = `${user.firstName} ${user.lastName}`;
+          div.appendChild(nameSpan);
+          const remBtn = document.createElement('button');
+          remBtn.className = 'btn-danger';
+          remBtn.textContent = 'Eliminar';
+          remBtn.style.marginLeft = '0.5rem';
+          remBtn.onclick = async () => {
+            await removeUserFromGroup(group.id, uid);
+            await renderGroupDetail(group.id);
+          };
+          div.appendChild(remBtn);
+          membersDiv.appendChild(div);
+        });
+      }
+      async function populateSelect() {
+        select.innerHTML = '';
+        const users = await getUsers();
+        // Obtener todas las asignaciones de grupos para mostrar la pertenencia
+        const groupsList = await getGroups();
+        const currentMembers = group.members || [];
+        let hasOption = false;
+        users.forEach(u => {
+          // Omitir administradores
+          if (u.role === 'admin') return;
+          // Omitir a los que ya pertenecen a este grupo
+          if (currentMembers.includes(u.id)) return;
+          const option = document.createElement('option');
+          // Buscar si el usuario ya pertenece a algún otro grupo
+          const userGroup = groupsList.find(gr => (gr.members || []).includes(u.id));
+          if (userGroup && userGroup.id !== group.id) {
+            // Mostrar el grupo actual en la opción y desactivar selección
+            option.value = '';
+            option.disabled = true;
+            option.textContent = `${u.firstName} ${u.lastName} (Grupo ${userGroup.name})`;
+          } else {
+            option.value = u.id;
+            option.textContent = `${u.firstName} ${u.lastName}`;
+          }
+          select.appendChild(option);
+          hasOption = true;
+        });
+        if (!hasOption) {
+          const opt = document.createElement('option');
+          opt.textContent = 'Sin empleados disponibles';
+          opt.disabled = true;
+          select.appendChild(opt);
+        }
+      }
+      // Manejar agregar miembros
+      addForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const selectedId = select.value;
+        if (!selectedId) return;
+        await addUserToGroup(group.id, selectedId);
+        await renderGroupDetail(group.id);
+      });
+    }
+  </script>
+</body>
+</html>
