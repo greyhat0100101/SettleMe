@@ -257,17 +257,6 @@ header .nav ul li a:hover {
   flex-wrap: wrap;
 }
 
-.group-item-buttons {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.group-item-buttons .btn-secondary {
-  padding: 0.35rem 0.75rem;
-  font-size: 0.85rem;
-}
-
 .group-empty {
   margin: 0;
   color: var(--secondary-color);
@@ -364,6 +353,74 @@ table thead {
   top: 0;
   z-index: 1;
   font-weight: 600;
+}
+
+#employeesSection table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+#employeesSection table thead {
+  border-radius: 5px 5px 0 0;
+  overflow: hidden;
+}
+
+#employeesSection table thead th:first-child {
+  border-top-left-radius: 5px;
+}
+
+#employeesSection table thead th:last-child {
+  border-top-right-radius: 5px;
+}
+
+.email-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.email-text {
+  font-weight: 500;
+}
+
+.email-cell button {
+  border: 1px solid var(--card-border);
+  background: transparent;
+  color: var(--text-color);
+  border-radius: 999px;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.email-cell button:hover,
+.email-cell button:focus {
+  background: var(--primary-color);
+  color: #fff;
+  border-color: var(--primary-color);
+}
+
+@media (max-width: 600px) {
+  #employeesSection .card {
+    padding: 1rem;
+  }
+
+  #employeesSection table th,
+  #employeesSection table td {
+    font-size: 0.7rem;
+    padding: 0.45rem 0.35rem;
+  }
+
+  .email-cell {
+    gap: 0.25rem;
+  }
+
+  .email-cell button {
+    font-size: 0.6rem;
+    padding: 0.15rem 0.4rem;
+  }
 }
 
 table tbody tr:nth-child(even) {
