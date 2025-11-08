@@ -246,111 +246,6 @@
   <!-- Fondo neuronal animado sin dependencias externas -->
   <script src="js/background.js"></script>
   <script>
-    function closeAllDropdowns(except = null) {
-      document.querySelectorAll('.dropdown.open').forEach(dropdown => {
-        if (!except || dropdown !== except) {
-          dropdown.classList.remove('open');
-        }
-      });
-    }
-
-    function buildEmailCell(cell, email) {
-      cell.classList.add('email-cell');
-
-      const toggleBtn = document.createElement('button');
-      toggleBtn.type = 'button';
-      toggleBtn.className = 'email-toggle';
-      toggleBtn.setAttribute('aria-expanded', 'false');
-      toggleBtn.setAttribute('aria-label', 'Mostrar email completo');
-      toggleBtn.title = 'Mostrar email';
-      toggleBtn.innerHTML = '&#9662;';
-      cell.appendChild(toggleBtn);
-
-      const content = document.createElement('div');
-      content.className = 'email-content';
-      content.hidden = true;
-
-      const text = document.createElement('span');
-      text.className = 'email-text';
-      text.textContent = email;
-      text.title = email;
-      content.appendChild(text);
-
-      const copyBtn = document.createElement('button');
-      copyBtn.type = 'button';
-      copyBtn.className = 'email-copy';
-      copyBtn.setAttribute('aria-label', 'Copiar email');
-      copyBtn.title = 'Copiar email';
-      copyBtn.innerHTML = '&#128203;';
-      copyBtn.addEventListener('click', async () => {
-        const resetLater = (replacement) => {
-          copyBtn.textContent = replacement;
-          setTimeout(() => {
-            copyBtn.innerHTML = '&#128203;';
-          }, 1500);
-        };
-
-        try {
-          if (navigator.clipboard?.writeText) {
-            await navigator.clipboard.writeText(email);
-            resetLater('✓');
-            return;
-          }
-        } catch (err) {
-          console.error('Clipboard API error', err);
-        }
-
-        try {
-          const tempInput = document.createElement('input');
-          tempInput.value = email;
-          document.body.appendChild(tempInput);
-          tempInput.select();
-          const copied = document.execCommand?.('copy');
-          document.body.removeChild(tempInput);
-          if (copied) {
-            resetLater('✓');
-          } else {
-            resetLater('!');
-          }
-        } catch (err) {
-          console.error('Fallback copy error', err);
-          resetLater('!');
-        }
-      });
-      content.appendChild(copyBtn);
-
-      toggleBtn.addEventListener('click', () => {
-        const expanded = toggleBtn.getAttribute('aria-expanded') === 'true';
-        toggleBtn.setAttribute('aria-expanded', String(!expanded));
-        toggleBtn.innerHTML = expanded ? '&#9662;' : '&#9652;';
-        const label = expanded ? 'Mostrar email completo' : 'Ocultar email';
-        toggleBtn.setAttribute('aria-label', label);
-        toggleBtn.title = label;
-        content.hidden = expanded;
-        if (!expanded) {
-          try {
-            copyBtn.focus({ preventScroll: true });
-          } catch (err) {
-            copyBtn.focus();
-          }
-        }
-      });
-
-      cell.appendChild(content);
-    }
-
-    document.addEventListener('click', (event) => {
-      if (!event.target.closest('.dropdown')) {
-        closeAllDropdowns();
-      }
-    });
-
-    document.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape') {
-        closeAllDropdowns();
-      }
-    });
-
     document.addEventListener('DOMContentLoaded', async () => {
       // Inicializar tema (claro/oscuro)
       initTheme();
@@ -683,9 +578,6 @@
         const nameTd = document.createElement('td');
         nameTd.textContent = `${u.firstName} ${u.middleName ? u.middleName + ' ' : ''}${u.lastName}`;
         tr.appendChild(nameTd);
-        // Email colapsable
-        const emailTd = document.createElement('td');
-        buildEmailCell(emailTd, u.email);
         // Email con versión truncada, tooltip y acciones
         const emailTd = document.createElement('td');
         emailTd.className = 'email-cell';
@@ -797,7 +689,6 @@
         const editOpt = document.createElement('button');
         editOpt.textContent = 'Editar pago';
         editOpt.onclick = () => {
-          closeAllDropdowns();
           dropdown.classList.remove('open');
           openPayModal(u);
         };
@@ -806,7 +697,6 @@
         const hoursCsvOpt = document.createElement('button');
         hoursCsvOpt.textContent = 'Horas CSV';
         hoursCsvOpt.onclick = () => {
-          closeAllDropdowns();
           dropdown.classList.remove('open');
           exportTimesCSV(u.id);
         };
@@ -815,7 +705,6 @@
         const hoursPdfOpt = document.createElement('button');
         hoursPdfOpt.textContent = 'Horas PDF';
         hoursPdfOpt.onclick = () => {
-          closeAllDropdowns();
           dropdown.classList.remove('open');
           exportTimesPDF(u.id);
         };
@@ -824,7 +713,6 @@
         const recCsvOpt = document.createElement('button');
         recCsvOpt.textContent = 'Recibos CSV';
         recCsvOpt.onclick = () => {
-          closeAllDropdowns();
           dropdown.classList.remove('open');
           exportReceiptsCSV(u.id);
         };
@@ -833,7 +721,6 @@
         const recPdfOpt = document.createElement('button');
         recPdfOpt.textContent = 'Recibos PDF';
         recPdfOpt.onclick = () => {
-          closeAllDropdowns();
           dropdown.classList.remove('open');
           exportReceiptsPDF(u.id);
         };
@@ -843,7 +730,6 @@
         delOpt.textContent = 'Eliminar';
         delOpt.className = 'danger';
         delOpt.onclick = () => {
-          closeAllDropdowns();
           dropdown.classList.remove('open');
           deleteEmployee(u);
         };
@@ -903,7 +789,6 @@
         dropBtn.type = 'button';
         dropBtn.className = 'dropdown-button';
         dropBtn.innerHTML = '&#8942;';
-        dropBtn.setAttribute('aria-label', `Acciones para ${g.name}`);
         dropBtn.setAttribute('aria-label', 'Acciones del grupo');
         dropBtn.addEventListener('click', (event) => {
           event.stopPropagation();
@@ -911,51 +796,6 @@
           dropdown.classList.toggle('open');
         });
         dropdown.appendChild(dropBtn);
-
-        const menu = document.createElement('div');
-        menu.className = 'dropdown-menu';
-
-        const detailsLink = document.createElement('a');
-        detailsLink.href = `group.html?groupId=${g.id}`;
-        detailsLink.textContent = 'Ver detalles';
-        detailsLink.addEventListener('click', () => closeAllDropdowns());
-        menu.appendChild(detailsLink);
-
-        const hoursCsvBtn = document.createElement('button');
-        hoursCsvBtn.type = 'button';
-        hoursCsvBtn.textContent = 'Horas CSV';
-        hoursCsvBtn.addEventListener('click', () => {
-          closeAllDropdowns();
-          exportGroupTimesCSV(g.id);
-        });
-        menu.appendChild(hoursCsvBtn);
-
-        const hoursPdfBtn = document.createElement('button');
-        hoursPdfBtn.type = 'button';
-        hoursPdfBtn.textContent = 'Horas PDF';
-        hoursPdfBtn.addEventListener('click', () => {
-          closeAllDropdowns();
-          exportGroupTimesPDF(g.id);
-        });
-        menu.appendChild(hoursPdfBtn);
-
-        const receiptsCsvBtn = document.createElement('button');
-        receiptsCsvBtn.type = 'button';
-        receiptsCsvBtn.textContent = 'Recibos CSV';
-        receiptsCsvBtn.addEventListener('click', () => {
-          closeAllDropdowns();
-          exportGroupReceiptsCSV(g.id);
-        });
-        menu.appendChild(receiptsCsvBtn);
-
-        const receiptsPdfBtn = document.createElement('button');
-        receiptsPdfBtn.type = 'button';
-        receiptsPdfBtn.textContent = 'Recibos PDF';
-        receiptsPdfBtn.addEventListener('click', () => {
-          closeAllDropdowns();
-          exportGroupReceiptsPDF(g.id);
-        });
-        menu.appendChild(receiptsPdfBtn);
 
         const menu = document.createElement('div');
         menu.className = 'dropdown-menu';
@@ -1320,11 +1160,11 @@
       const payRate = parseFloat(document.getElementById('editPayRate').value);
       await updateUserPay(selectedPayUser.id, payType, payRate);
       const currentFilter = document.getElementById('filterGroup') ? document.getElementById('filterGroup').value : '';
-      const searchInput = document.getElementById('filterName');
-      const searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
-      await loadEmployees(currentFilter, searchTerm);
+      await loadEmployees(currentFilter);
       // Después de actualizar el pago, recargar tabla de deudas para reflejar el nuevo cálculo
-      await loadDebtTable(currentFilter, searchTerm);
+      await loadDebtTable(currentFilter, (document.getElementById('filterName') || {}).value);
+      // Después de actualizar el pago, recargar tabla de deudas para reflejar el nuevo cálculo
+      await loadDebtTable(currentFilter, (document.getElementById('filterName') || {}).value);
       closePayModal();
     }
 
@@ -1423,12 +1263,6 @@
         const debtDropdown = document.createElement('div');
         debtDropdown.className = 'dropdown';
 
-        const debtBtn = document.createElement('button');
-        debtBtn.type = 'button';
-        debtBtn.className = 'dropdown-button';
-        debtBtn.innerHTML = '&#8942;';
-        debtBtn.setAttribute('aria-label', `Acciones de deuda para ${u.firstName}`);
-        debtBtn.addEventListener('click', (event) => {
         const debtDropBtn = document.createElement('button');
         debtDropBtn.type = 'button';
         debtDropBtn.className = 'dropdown-button';
@@ -1439,29 +1273,11 @@
           closeAllDropdowns(debtDropdown);
           debtDropdown.classList.toggle('open');
         });
-        debtDropdown.appendChild(debtBtn);
         debtDropdown.appendChild(debtDropBtn);
 
         const debtMenu = document.createElement('div');
         debtMenu.className = 'dropdown-menu';
 
-        const hoursBtn = document.createElement('button');
-        hoursBtn.type = 'button';
-        hoursBtn.textContent = 'Horas';
-        hoursBtn.addEventListener('click', () => {
-          closeAllDropdowns();
-          openHoursViewer(u.id);
-        });
-        debtMenu.appendChild(hoursBtn);
-
-        const receiptsBtn = document.createElement('button');
-        receiptsBtn.type = 'button';
-        receiptsBtn.textContent = 'Recibos';
-        receiptsBtn.addEventListener('click', () => {
-          closeAllDropdowns();
-          openReceiptsViewer(u.id);
-        });
-        debtMenu.appendChild(receiptsBtn);
         const viewHoursOpt = document.createElement('button');
         viewHoursOpt.textContent = 'Ver horas';
         viewHoursOpt.addEventListener('click', () => {

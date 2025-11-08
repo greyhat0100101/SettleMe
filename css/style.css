@@ -380,16 +380,6 @@ table thead {
   flex-wrap: wrap;
 }
 
-.email-content {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-.email-content[hidden] {
-  display: none !important;
-}
-
 .email-text {
   font-weight: 500;
 }
@@ -403,19 +393,6 @@ table thead {
   font-size: 0.7rem;
   cursor: pointer;
   transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
-}
-
-.email-toggle {
-  width: 2rem;
-  justify-content: center;
-  display: inline-flex;
-  align-items: center;
-  padding: 0.2rem 0.4rem;
-}
-
-.email-copy {
-  padding: 0.15rem 0.4rem;
-  font-size: 0.65rem;
 }
 
 .email-cell button:hover,
@@ -443,10 +420,6 @@ table thead {
   .email-cell button {
     font-size: 0.6rem;
     padding: 0.15rem 0.4rem;
-  }
-
-  .email-toggle {
-    width: 1.6rem;
   }
 }
 
