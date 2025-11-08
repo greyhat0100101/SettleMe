@@ -1180,9 +1180,10 @@
       const currentFilter = document.getElementById('filterGroup') ? document.getElementById('filterGroup').value : '';
       await loadEmployees(currentFilter);
       // Después de actualizar el pago, recargar tabla de deudas para reflejar el nuevo cálculo
-      await loadDebtTable(currentFilter, (document.getElementById('filterName') || {}).value);
-      // Después de actualizar el pago, recargar tabla de deudas para reflejar el nuevo cálculo
-      await loadDebtTable(currentFilter, (document.getElementById('filterName') || {}).value);
+      await loadDebtTable(
+        currentFilter,
+        (document.getElementById('filterName') || {}).value
+      );
       closePayModal();
     }
 
