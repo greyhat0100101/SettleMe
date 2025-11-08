@@ -246,6 +246,111 @@
   <!-- Fondo neuronal animado sin dependencias externas -->
   <script src="js/background.js"></script>
   <script>
+    function closeAllDropdowns(except = null) {
+      document.querySelectorAll('.dropdown.open').forEach(dropdown => {
+        if (!except || dropdown !== except) {
+          dropdown.classList.remove('open');
+        }
+      });
+    }
+
+    function buildEmailCell(cell, email) {
+      cell.classList.add('email-cell');
+
+      const toggleBtn = document.createElement('button');
+      toggleBtn.type = 'button';
+      toggleBtn.className = 'email-toggle';
+      toggleBtn.setAttribute('aria-expanded', 'false');
+      toggleBtn.setAttribute('aria-label', 'Mostrar email completo');
+      toggleBtn.title = 'Mostrar email';
+      toggleBtn.innerHTML = '&#9662;';
+      cell.appendChild(toggleBtn);
+
+      const content = document.createElement('div');
+      content.className = 'email-content';
+      content.hidden = true;
+
+      const text = document.createElement('span');
+      text.className = 'email-text';
+      text.textContent = email;
+      text.title = email;
+      content.appendChild(text);
+
+      const copyBtn = document.createElement('button');
+      copyBtn.type = 'button';
+      copyBtn.className = 'email-copy';
+      copyBtn.setAttribute('aria-label', 'Copiar email');
+      copyBtn.title = 'Copiar email';
+      copyBtn.innerHTML = '&#128203;';
+      copyBtn.addEventListener('click', async () => {
+        const resetLater = (replacement) => {
+          copyBtn.textContent = replacement;
+          setTimeout(() => {
+            copyBtn.innerHTML = '&#128203;';
+          }, 1500);
+        };
+
+        try {
+          if (navigator.clipboard?.writeText) {
+            await navigator.clipboard.writeText(email);
+            resetLater('✓');
+            return;
+          }
+        } catch (err) {
+          console.error('Clipboard API error', err);
+        }
+
+        try {
+          const tempInput = document.createElement('input');
+          tempInput.value = email;
+          document.body.appendChild(tempInput);
+          tempInput.select();
+          const copied = document.execCommand?.('copy');
+          document.body.removeChild(tempInput);
+          if (copied) {
+            resetLater('✓');
+          } else {
+            resetLater('!');
+          }
+        } catch (err) {
+          console.error('Fallback copy error', err);
+          resetLater('!');
+        }
+      });
+      content.appendChild(copyBtn);
+
+      toggleBtn.addEventListener('click', () => {
+        const expanded = toggleBtn.getAttribute('aria-expanded') === 'true';
+        toggleBtn.setAttribute('aria-expanded', String(!expanded));
+        toggleBtn.innerHTML = expanded ? '&#9662;' : '&#9652;';
+        const label = expanded ? 'Mostrar email completo' : 'Ocultar email';
+        toggleBtn.setAttribute('aria-label', label);
+        toggleBtn.title = label;
+        content.hidden = expanded;
+        if (!expanded) {
+          try {
+            copyBtn.focus({ preventScroll: true });
+          } catch (err) {
+            copyBtn.focus();
+          }
+        }
+      });
+
+      cell.appendChild(content);
+    }
+
+    document.addEventListener('click', (event) => {
+      if (!event.target.closest('.dropdown')) {
+        closeAllDropdowns();
+      }
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        closeAllDropdowns();
+      }
+    });
+
     document.addEventListener('DOMContentLoaded', async () => {
       // Inicializar tema (claro/oscuro)
       initTheme();
@@ -495,13 +600,6 @@
         });
       }
 
-      // Cerrar menús desplegables en la tabla de empleados al hacer clic fuera de ellos
-      document.addEventListener('click', (ev) => {
-        const dropdowns = document.querySelectorAll('#employeesTable .dropdown');
-        dropdowns.forEach(dd => {
-          if (!dd.contains(ev.target)) dd.classList.remove('open');
-        });
-      });
     });
 
     // === NUEVO: función para eliminar empleado ===
@@ -569,9 +667,9 @@
         const nameTd = document.createElement('td');
         nameTd.textContent = `${u.firstName} ${u.middleName ? u.middleName + ' ' : ''}${u.lastName}`;
         tr.appendChild(nameTd);
-        // Email
+        // Email colapsable
         const emailTd = document.createElement('td');
-        emailTd.textContent = u.email;
+        buildEmailCell(emailTd, u.email);
         tr.appendChild(emailTd);
         // Grupos del usuario
         const groupsTd = document.createElement('td');
@@ -606,43 +704,58 @@
         // Opción: Editar pago
         const editOpt = document.createElement('button');
         editOpt.textContent = 'Editar pago';
-        editOpt.onclick = () => openPayModal(u);
+        editOpt.onclick = () => {
+          closeAllDropdowns();
+          openPayModal(u);
+        };
         menu.appendChild(editOpt);
         // Opción: Horas CSV
         const hoursCsvOpt = document.createElement('button');
         hoursCsvOpt.textContent = 'Horas CSV';
-        hoursCsvOpt.onclick = () => exportTimesCSV(u.id);
+        hoursCsvOpt.onclick = () => {
+          closeAllDropdowns();
+          exportTimesCSV(u.id);
+        };
         menu.appendChild(hoursCsvOpt);
         // Opción: Horas PDF
         const hoursPdfOpt = document.createElement('button');
         hoursPdfOpt.textContent = 'Horas PDF';
-        hoursPdfOpt.onclick = () => exportTimesPDF(u.id);
+        hoursPdfOpt.onclick = () => {
+          closeAllDropdowns();
+          exportTimesPDF(u.id);
+        };
         menu.appendChild(hoursPdfOpt);
         // Opción: Recibos CSV
         const recCsvOpt = document.createElement('button');
         recCsvOpt.textContent = 'Recibos CSV';
-        recCsvOpt.onclick = () => exportReceiptsCSV(u.id);
+        recCsvOpt.onclick = () => {
+          closeAllDropdowns();
+          exportReceiptsCSV(u.id);
+        };
         menu.appendChild(recCsvOpt);
         // Opción: Recibos PDF
         const recPdfOpt = document.createElement('button');
         recPdfOpt.textContent = 'Recibos PDF';
-        recPdfOpt.onclick = () => exportReceiptsPDF(u.id);
+        recPdfOpt.onclick = () => {
+          closeAllDropdowns();
+          exportReceiptsPDF(u.id);
+        };
         menu.appendChild(recPdfOpt);
         // === NUEVO: Opción eliminar ===
         const delOpt = document.createElement('button');
         delOpt.textContent = 'Eliminar';
         delOpt.className = 'danger';
-        delOpt.onclick = () => deleteEmployee(u);
+        delOpt.onclick = () => {
+          closeAllDropdowns();
+          deleteEmployee(u);
+        };
         menu.appendChild(delOpt);
 
         dropdown.appendChild(menu);
         // Gestionar apertura del menú al hacer clic
         dropBtn.addEventListener('click', (e) => {
           e.stopPropagation();
-          // Cerrar otros menús abiertos
-          document.querySelectorAll('#employeesTable .dropdown').forEach(dd => {
-            if (dd !== dropdown) dd.classList.remove('open');
-          });
+          closeAllDropdowns(dropdown);
           dropdown.classList.toggle('open');
         });
         actionsTd.appendChild(dropdown);
@@ -685,44 +798,68 @@
         const actions = document.createElement('div');
         actions.className = 'group-item-actions';
 
+        const dropdown = document.createElement('div');
+        dropdown.className = 'dropdown';
+
+        const dropBtn = document.createElement('button');
+        dropBtn.type = 'button';
+        dropBtn.className = 'dropdown-button';
+        dropBtn.innerHTML = '&#8942;';
+        dropBtn.setAttribute('aria-label', `Acciones para ${g.name}`);
+        dropBtn.addEventListener('click', (event) => {
+          event.stopPropagation();
+          closeAllDropdowns(dropdown);
+          dropdown.classList.toggle('open');
+        });
+        dropdown.appendChild(dropBtn);
+
+        const menu = document.createElement('div');
+        menu.className = 'dropdown-menu';
+
         const detailsLink = document.createElement('a');
         detailsLink.href = `group.html?groupId=${g.id}`;
-        detailsLink.className = 'action-link';
         detailsLink.textContent = 'Ver detalles';
-        actions.appendChild(detailsLink);
+        detailsLink.addEventListener('click', () => closeAllDropdowns());
+        menu.appendChild(detailsLink);
 
-        const buttons = document.createElement('div');
-        buttons.className = 'group-item-buttons';
+        const hoursCsvBtn = document.createElement('button');
+        hoursCsvBtn.type = 'button';
+        hoursCsvBtn.textContent = 'Horas CSV';
+        hoursCsvBtn.addEventListener('click', () => {
+          closeAllDropdowns();
+          exportGroupTimesCSV(g.id);
+        });
+        menu.appendChild(hoursCsvBtn);
 
-        const btnTimesCsv = document.createElement('button');
-        btnTimesCsv.type = 'button';
-        btnTimesCsv.className = 'btn-secondary';
-        btnTimesCsv.textContent = 'Horas CSV';
-        btnTimesCsv.addEventListener('click', () => exportGroupTimesCSV(g.id));
-        buttons.appendChild(btnTimesCsv);
+        const hoursPdfBtn = document.createElement('button');
+        hoursPdfBtn.type = 'button';
+        hoursPdfBtn.textContent = 'Horas PDF';
+        hoursPdfBtn.addEventListener('click', () => {
+          closeAllDropdowns();
+          exportGroupTimesPDF(g.id);
+        });
+        menu.appendChild(hoursPdfBtn);
 
-        const btnTimesPdf = document.createElement('button');
-        btnTimesPdf.type = 'button';
-        btnTimesPdf.className = 'btn-secondary';
-        btnTimesPdf.textContent = 'Horas PDF';
-        btnTimesPdf.addEventListener('click', () => exportGroupTimesPDF(g.id));
-        buttons.appendChild(btnTimesPdf);
+        const receiptsCsvBtn = document.createElement('button');
+        receiptsCsvBtn.type = 'button';
+        receiptsCsvBtn.textContent = 'Recibos CSV';
+        receiptsCsvBtn.addEventListener('click', () => {
+          closeAllDropdowns();
+          exportGroupReceiptsCSV(g.id);
+        });
+        menu.appendChild(receiptsCsvBtn);
 
-        const btnRecCsv = document.createElement('button');
-        btnRecCsv.type = 'button';
-        btnRecCsv.className = 'btn-secondary';
-        btnRecCsv.textContent = 'Recibos CSV';
-        btnRecCsv.addEventListener('click', () => exportGroupReceiptsCSV(g.id));
-        buttons.appendChild(btnRecCsv);
+        const receiptsPdfBtn = document.createElement('button');
+        receiptsPdfBtn.type = 'button';
+        receiptsPdfBtn.textContent = 'Recibos PDF';
+        receiptsPdfBtn.addEventListener('click', () => {
+          closeAllDropdowns();
+          exportGroupReceiptsPDF(g.id);
+        });
+        menu.appendChild(receiptsPdfBtn);
 
-        const btnRecPdf = document.createElement('button');
-        btnRecPdf.type = 'button';
-        btnRecPdf.className = 'btn-secondary';
-        btnRecPdf.textContent = 'Recibos PDF';
-        btnRecPdf.addEventListener('click', () => exportGroupReceiptsPDF(g.id));
-        buttons.appendChild(btnRecPdf);
-
-        actions.appendChild(buttons);
+        dropdown.appendChild(menu);
+        actions.appendChild(dropdown);
         item.appendChild(actions);
 
         listEl.appendChild(item);
@@ -1041,11 +1178,11 @@
       const payRate = parseFloat(document.getElementById('editPayRate').value);
       await updateUserPay(selectedPayUser.id, payType, payRate);
       const currentFilter = document.getElementById('filterGroup') ? document.getElementById('filterGroup').value : '';
-      await loadEmployees(currentFilter);
+      const searchInput = document.getElementById('filterName');
+      const searchTerm = searchInput ? searchInput.value.trim().toLowerCase() : '';
+      await loadEmployees(currentFilter, searchTerm);
       // Después de actualizar el pago, recargar tabla de deudas para reflejar el nuevo cálculo
-      await loadDebtTable(currentFilter, (document.getElementById('filterName') || {}).value);
-      // Después de actualizar el pago, recargar tabla de deudas para reflejar el nuevo cálculo
-      await loadDebtTable(currentFilter, (document.getElementById('filterName') || {}).value);
+      await loadDebtTable(currentFilter, searchTerm);
       closePayModal();
     }
 
@@ -1141,17 +1278,44 @@
         totalTd.textContent = totalDue.toFixed(2);
         tr.appendChild(totalTd);
         const actionTd = document.createElement('td');
-        const viewHoursBtn = document.createElement('button');
-        viewHoursBtn.className = 'btn-secondary';
-        viewHoursBtn.textContent = 'Horas';
-        viewHoursBtn.onclick = () => openHoursViewer(u.id);
-        actionTd.appendChild(viewHoursBtn);
-        const viewRecBtn = document.createElement('button');
-        viewRecBtn.className = 'btn-secondary';
-        viewRecBtn.style.marginLeft = '0.25rem';
-        viewRecBtn.textContent = 'Recibos';
-        viewRecBtn.onclick = () => openReceiptsViewer(u.id);
-        actionTd.appendChild(viewRecBtn);
+        const debtDropdown = document.createElement('div');
+        debtDropdown.className = 'dropdown';
+
+        const debtBtn = document.createElement('button');
+        debtBtn.type = 'button';
+        debtBtn.className = 'dropdown-button';
+        debtBtn.innerHTML = '&#8942;';
+        debtBtn.setAttribute('aria-label', `Acciones de deuda para ${u.firstName}`);
+        debtBtn.addEventListener('click', (event) => {
+          event.stopPropagation();
+          closeAllDropdowns(debtDropdown);
+          debtDropdown.classList.toggle('open');
+        });
+        debtDropdown.appendChild(debtBtn);
+
+        const debtMenu = document.createElement('div');
+        debtMenu.className = 'dropdown-menu';
+
+        const hoursBtn = document.createElement('button');
+        hoursBtn.type = 'button';
+        hoursBtn.textContent = 'Horas';
+        hoursBtn.addEventListener('click', () => {
+          closeAllDropdowns();
+          openHoursViewer(u.id);
+        });
+        debtMenu.appendChild(hoursBtn);
+
+        const receiptsBtn = document.createElement('button');
+        receiptsBtn.type = 'button';
+        receiptsBtn.textContent = 'Recibos';
+        receiptsBtn.addEventListener('click', () => {
+          closeAllDropdowns();
+          openReceiptsViewer(u.id);
+        });
+        debtMenu.appendChild(receiptsBtn);
+
+        debtDropdown.appendChild(debtMenu);
+        actionTd.appendChild(debtDropdown);
         tr.appendChild(actionTd);
         tbody.appendChild(tr);
       }
