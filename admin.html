@@ -578,9 +578,82 @@
         const nameTd = document.createElement('td');
         nameTd.textContent = `${u.firstName} ${u.middleName ? u.middleName + ' ' : ''}${u.lastName}`;
         tr.appendChild(nameTd);
-        // Email
+        // Email con versión truncada, tooltip y acciones
         const emailTd = document.createElement('td');
-        emailTd.textContent = u.email;
+        emailTd.className = 'email-cell';
+        emailTd.title = u.email;
+
+        const truncatedEmail = u.email.length > 5 ? `${u.email.slice(0, 5)}...` : u.email;
+        const emailText = document.createElement('span');
+        emailText.className = 'email-text';
+        emailText.dataset.full = u.email;
+        emailText.dataset.short = truncatedEmail;
+        emailText.textContent = truncatedEmail;
+        emailTd.appendChild(emailText);
+
+        const toggleBtn = document.createElement('button');
+        toggleBtn.type = 'button';
+        toggleBtn.className = 'email-toggle';
+        toggleBtn.setAttribute('aria-expanded', 'false');
+        toggleBtn.textContent = 'Ver';
+        toggleBtn.addEventListener('click', () => {
+          const expanded = toggleBtn.getAttribute('aria-expanded') === 'true';
+          if (expanded) {
+            emailText.textContent = emailText.dataset.short;
+            toggleBtn.textContent = 'Ver';
+          } else {
+            emailText.textContent = emailText.dataset.full;
+            toggleBtn.textContent = 'Ocultar';
+          }
+          toggleBtn.setAttribute('aria-expanded', String(!expanded));
+        });
+        emailTd.appendChild(toggleBtn);
+
+        const copyBtn = document.createElement('button');
+        copyBtn.type = 'button';
+        copyBtn.className = 'email-copy';
+        copyBtn.textContent = 'Copiar';
+        copyBtn.addEventListener('click', async () => {
+          const restore = () => {
+            setTimeout(() => {
+              copyBtn.textContent = 'Copiar';
+            }, 2000);
+          };
+
+          const indicateSuccess = () => {
+            copyBtn.textContent = 'Copiado!';
+            restore();
+          };
+
+          const indicateError = () => {
+            copyBtn.textContent = 'Error';
+            restore();
+          };
+
+          try {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              await navigator.clipboard.writeText(u.email);
+              indicateSuccess();
+            } else {
+              const tempInput = document.createElement('input');
+              tempInput.value = u.email;
+              document.body.appendChild(tempInput);
+              tempInput.select();
+              const copied = document.execCommand && document.execCommand('copy');
+              document.body.removeChild(tempInput);
+              if (copied) {
+                indicateSuccess();
+              } else {
+                indicateError();
+              }
+            }
+          } catch (err) {
+            console.error('Error copiando email:', err);
+            indicateError();
+          }
+        });
+        emailTd.appendChild(copyBtn);
+
         tr.appendChild(emailTd);
         // Grupos del usuario
         const groupsTd = document.createElement('td');
