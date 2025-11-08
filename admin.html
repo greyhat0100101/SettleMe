@@ -600,7 +600,23 @@
         });
       }
 
+      // Cerrar menús desplegables al hacer clic fuera de ellos
+      document.addEventListener('click', (ev) => {
+        document.querySelectorAll('.dropdown.open').forEach(dd => {
+          if (!dd.contains(ev.target)) {
+            dd.classList.remove('open');
+          }
+        });
+      });
     });
+
+    function closeAllDropdowns(except = null) {
+      document.querySelectorAll('.dropdown.open').forEach(dd => {
+        if (!except || dd !== except) {
+          dd.classList.remove('open');
+        }
+      });
+    }
 
     // === NUEVO: función para eliminar empleado ===
     async function deleteEmployee(user) {
@@ -670,6 +686,82 @@
         // Email colapsable
         const emailTd = document.createElement('td');
         buildEmailCell(emailTd, u.email);
+        // Email con versión truncada, tooltip y acciones
+        const emailTd = document.createElement('td');
+        emailTd.className = 'email-cell';
+        emailTd.title = u.email;
+
+        const truncatedEmail = u.email.length > 5 ? `${u.email.slice(0, 5)}...` : u.email;
+        const emailText = document.createElement('span');
+        emailText.className = 'email-text';
+        emailText.dataset.full = u.email;
+        emailText.dataset.short = truncatedEmail;
+        emailText.textContent = truncatedEmail;
+        emailTd.appendChild(emailText);
+
+        const toggleBtn = document.createElement('button');
+        toggleBtn.type = 'button';
+        toggleBtn.className = 'email-toggle';
+        toggleBtn.setAttribute('aria-expanded', 'false');
+        toggleBtn.textContent = 'Ver';
+        toggleBtn.addEventListener('click', () => {
+          const expanded = toggleBtn.getAttribute('aria-expanded') === 'true';
+          if (expanded) {
+            emailText.textContent = emailText.dataset.short;
+            toggleBtn.textContent = 'Ver';
+          } else {
+            emailText.textContent = emailText.dataset.full;
+            toggleBtn.textContent = 'Ocultar';
+          }
+          toggleBtn.setAttribute('aria-expanded', String(!expanded));
+        });
+        emailTd.appendChild(toggleBtn);
+
+        const copyBtn = document.createElement('button');
+        copyBtn.type = 'button';
+        copyBtn.className = 'email-copy';
+        copyBtn.textContent = 'Copiar';
+        copyBtn.addEventListener('click', async () => {
+          const restore = () => {
+            setTimeout(() => {
+              copyBtn.textContent = 'Copiar';
+            }, 2000);
+          };
+
+          const indicateSuccess = () => {
+            copyBtn.textContent = 'Copiado!';
+            restore();
+          };
+
+          const indicateError = () => {
+            copyBtn.textContent = 'Error';
+            restore();
+          };
+
+          try {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              await navigator.clipboard.writeText(u.email);
+              indicateSuccess();
+            } else {
+              const tempInput = document.createElement('input');
+              tempInput.value = u.email;
+              document.body.appendChild(tempInput);
+              tempInput.select();
+              const copied = document.execCommand && document.execCommand('copy');
+              document.body.removeChild(tempInput);
+              if (copied) {
+                indicateSuccess();
+              } else {
+                indicateError();
+              }
+            }
+          } catch (err) {
+            console.error('Error copiando email:', err);
+            indicateError();
+          }
+        });
+        emailTd.appendChild(copyBtn);
+
         tr.appendChild(emailTd);
         // Grupos del usuario
         const groupsTd = document.createElement('td');
@@ -706,6 +798,7 @@
         editOpt.textContent = 'Editar pago';
         editOpt.onclick = () => {
           closeAllDropdowns();
+          dropdown.classList.remove('open');
           openPayModal(u);
         };
         menu.appendChild(editOpt);
@@ -714,6 +807,7 @@
         hoursCsvOpt.textContent = 'Horas CSV';
         hoursCsvOpt.onclick = () => {
           closeAllDropdowns();
+          dropdown.classList.remove('open');
           exportTimesCSV(u.id);
         };
         menu.appendChild(hoursCsvOpt);
@@ -722,6 +816,7 @@
         hoursPdfOpt.textContent = 'Horas PDF';
         hoursPdfOpt.onclick = () => {
           closeAllDropdowns();
+          dropdown.classList.remove('open');
           exportTimesPDF(u.id);
         };
         menu.appendChild(hoursPdfOpt);
@@ -730,6 +825,7 @@
         recCsvOpt.textContent = 'Recibos CSV';
         recCsvOpt.onclick = () => {
           closeAllDropdowns();
+          dropdown.classList.remove('open');
           exportReceiptsCSV(u.id);
         };
         menu.appendChild(recCsvOpt);
@@ -738,6 +834,7 @@
         recPdfOpt.textContent = 'Recibos PDF';
         recPdfOpt.onclick = () => {
           closeAllDropdowns();
+          dropdown.classList.remove('open');
           exportReceiptsPDF(u.id);
         };
         menu.appendChild(recPdfOpt);
@@ -747,6 +844,7 @@
         delOpt.className = 'danger';
         delOpt.onclick = () => {
           closeAllDropdowns();
+          dropdown.classList.remove('open');
           deleteEmployee(u);
         };
         menu.appendChild(delOpt);
@@ -806,6 +904,7 @@
         dropBtn.className = 'dropdown-button';
         dropBtn.innerHTML = '&#8942;';
         dropBtn.setAttribute('aria-label', `Acciones para ${g.name}`);
+        dropBtn.setAttribute('aria-label', 'Acciones del grupo');
         dropBtn.addEventListener('click', (event) => {
           event.stopPropagation();
           closeAllDropdowns(dropdown);
@@ -857,6 +956,49 @@
           exportGroupReceiptsPDF(g.id);
         });
         menu.appendChild(receiptsPdfBtn);
+
+        const menu = document.createElement('div');
+        menu.className = 'dropdown-menu';
+
+        const detailsOpt = document.createElement('a');
+        detailsOpt.href = `group.html?groupId=${g.id}`;
+        detailsOpt.textContent = 'Ver detalles';
+        detailsOpt.addEventListener('click', () => {
+          dropdown.classList.remove('open');
+        });
+        menu.appendChild(detailsOpt);
+
+        const timesCsvOpt = document.createElement('button');
+        timesCsvOpt.textContent = 'Horas CSV';
+        timesCsvOpt.addEventListener('click', () => {
+          dropdown.classList.remove('open');
+          exportGroupTimesCSV(g.id);
+        });
+        menu.appendChild(timesCsvOpt);
+
+        const timesPdfOpt = document.createElement('button');
+        timesPdfOpt.textContent = 'Horas PDF';
+        timesPdfOpt.addEventListener('click', () => {
+          dropdown.classList.remove('open');
+          exportGroupTimesPDF(g.id);
+        });
+        menu.appendChild(timesPdfOpt);
+
+        const recCsvOpt = document.createElement('button');
+        recCsvOpt.textContent = 'Recibos CSV';
+        recCsvOpt.addEventListener('click', () => {
+          dropdown.classList.remove('open');
+          exportGroupReceiptsCSV(g.id);
+        });
+        menu.appendChild(recCsvOpt);
+
+        const recPdfOpt = document.createElement('button');
+        recPdfOpt.textContent = 'Recibos PDF';
+        recPdfOpt.addEventListener('click', () => {
+          dropdown.classList.remove('open');
+          exportGroupReceiptsPDF(g.id);
+        });
+        menu.appendChild(recPdfOpt);
 
         dropdown.appendChild(menu);
         actions.appendChild(dropdown);
@@ -1287,11 +1429,18 @@
         debtBtn.innerHTML = '&#8942;';
         debtBtn.setAttribute('aria-label', `Acciones de deuda para ${u.firstName}`);
         debtBtn.addEventListener('click', (event) => {
+        const debtDropBtn = document.createElement('button');
+        debtDropBtn.type = 'button';
+        debtDropBtn.className = 'dropdown-button';
+        debtDropBtn.innerHTML = '&#8942;';
+        debtDropBtn.setAttribute('aria-label', 'Acciones de deuda');
+        debtDropBtn.addEventListener('click', (event) => {
           event.stopPropagation();
           closeAllDropdowns(debtDropdown);
           debtDropdown.classList.toggle('open');
         });
         debtDropdown.appendChild(debtBtn);
+        debtDropdown.appendChild(debtDropBtn);
 
         const debtMenu = document.createElement('div');
         debtMenu.className = 'dropdown-menu';
@@ -1313,6 +1462,21 @@
           openReceiptsViewer(u.id);
         });
         debtMenu.appendChild(receiptsBtn);
+        const viewHoursOpt = document.createElement('button');
+        viewHoursOpt.textContent = 'Ver horas';
+        viewHoursOpt.addEventListener('click', () => {
+          debtDropdown.classList.remove('open');
+          openHoursViewer(u.id);
+        });
+        debtMenu.appendChild(viewHoursOpt);
+
+        const viewReceiptsOpt = document.createElement('button');
+        viewReceiptsOpt.textContent = 'Ver recibos';
+        viewReceiptsOpt.addEventListener('click', () => {
+          debtDropdown.classList.remove('open');
+          openReceiptsViewer(u.id);
+        });
+        debtMenu.appendChild(viewReceiptsOpt);
 
         debtDropdown.appendChild(debtMenu);
         actionTd.appendChild(debtDropdown);
